@@ -22,12 +22,14 @@ win32 {
 }
 
 SOURCES += ui/mainwindow.cpp \
+    gl/resourceloader.cpp \
     main.cpp \
     glew-1.10.0/src/glew.c \
     ui/view.cpp \
     ui/viewformat.cpp
 
 HEADERS += ui/mainwindow.h \
+    gl/resourceloader.h \
     ui_mainwindow.h \
     glew-1.10.0/include/GL/glew.h \
     ui/view.h \

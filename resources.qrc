@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/shaders">
-        <file alias="default.frag">shaders/shader.frag</file>
-        <file alias="default.vert">shaders/shader.vert</file>
+        <file alias="default.frag">shaders/raymarch.frag</file>
+        <file alias="default.vert">shaders/raymarch.vert</file>
+        <file>raymarch.vert</file>
+        <file>raymarch.frag</file>
     </qresource>
 </RCC>

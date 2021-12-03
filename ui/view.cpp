@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <iostream>
+#include "gl/resourceloader.h"
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_time(), m_timer(), m_captureMouse(false)
@@ -48,14 +49,20 @@ void View::initializeGL() {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+
+    // resize
+    resizeGL(width(), height());
+
+    // Set the color to set the screen when the color buffer is cleared.
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // Creates the shader program that will be used for drawing.
+    m_program = ResourceLoader::createShaderProgram(":/shaders/raymarch.vert", ":/shaders/raymarch.frag");
 }
 
 void View::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // TODO: Implement the demo rendering here
+    glUseProgram(m_program);
 }
 
 void View::resizeGL(int w, int h) {
