@@ -97,6 +97,14 @@ void View::paintGL() {
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
     glUniform1f(timeUniformLoc, 0.f);
 
+    GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
+    glUniform3f(camEyeUniformLoc, m_camera->);
+
+
+    uniform vec3 camEye;
+    uniform vec3 camUp;
+    uniform float focalLen;
+
     m_quad->draw();
     glUseProgram(0);
 }

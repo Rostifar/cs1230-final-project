@@ -6,6 +6,10 @@ layout(location = 0) out vec4 color;
 
 uniform float iTime;
 uniform vec2 iResolution;
+uniform vec3 camEye;
+uniform vec3 camUp;
+uniform float focalLen;
+uniform mat4 viewMatrix;
 
 
 #define SPHERE 0
@@ -190,16 +194,16 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 }
 
 void main() {
-    vec3 rayOrigin = vec3(6.0f, 4.8f, 0.0f);
+    vec3 rayOrigin = camEye;
 
-    float focalLength = 2.0;
+    float focalLength = focalLen;
 
     // The target we are looking at
-    vec3 target = vec3(0.0);
+    //vec3 target = vec3(0.0);
     // Look vector
     vec3 look = normalize(rayOrigin - target);
     // Up vector
-    vec3 up = vec3(0.0, 1.0, 0.0);
+    vec3 up = camUp;
 
     // Set up camera matrix
     vec3 cameraForward = -look;
