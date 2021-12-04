@@ -6,6 +6,8 @@
 #include <QTime>
 #include <QTimer>
 #include "gl/openglshape.h"
+#include <chrono>
+
 
 class View : public QGLWidget {
     Q_OBJECT
@@ -15,6 +17,10 @@ public:
     ~View();
 
 private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_t1;
+    float m_globalTime;
+
     QTime m_time;
     QTimer m_timer;
     bool m_captureMouse;

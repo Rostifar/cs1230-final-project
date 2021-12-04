@@ -49,6 +49,9 @@ void View::initializeGL() {
     m_time.start();
     m_timer.start(1000 / 60);
 
+    m_globalTime = 0;
+    m_t0 = std::chrono::high_resolution_clock::now();
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -63,22 +66,35 @@ void View::initializeGL() {
 
     // vertex coordinates followed by uv
     std::vector<float> quad = {
-        -1,  1, 0,
-         -1, -1, 0,
-         1,  1, 0,
-         1, -1, 0
+        -1,  1, 0, 0, 0,
+        -1, -1, 0, 0, 1,
+         1,  1, 0, 1, 0,
+         1, -1, 0, 1, 1
     };
 
+    // construct a fullscreen quad
     m_quad = std::make_unique<OpenGLShape>();
-    m_quad->setVertexData(&quad[0], quad.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, quad.size() / 3);
+    m_quad->setVertexData(&quad[0], quad.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, quad.size() / 5);
     m_quad->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-    //m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->buildVAO();
 }
 
 void View::paintGL() {
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_program);
+
+    GLint screenResUniformLoc = glGetUniformLocation(m_program, "iResolution");
+    GLint m_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, m_viewport);
+
+    assert(m_viewport[2] == width() && m_viewport[3] == height());
+    glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
+
+    GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
+    glUniform1f(timeUniformLoc, 0.f);
+
     m_quad->draw();
     glUseProgram(0);
 }
