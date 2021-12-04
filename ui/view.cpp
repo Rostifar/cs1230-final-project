@@ -9,8 +9,11 @@
 #include "gl/shaders/ShaderAttribLocations.h"
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
-    m_time(), m_timer(), m_captureMouse(false)
+    m_time(), m_timer(), m_captureMouse(false), m_isDragging(false),
+    m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
 {
+    m_camera = std::unique_ptr<OrbitingCamera>(new OrbitingCamera);
+
     // View needs all mouse move events, not just mouse drag events
     setMouseTracking(true);
 
@@ -49,9 +52,6 @@ void View::initializeGL() {
     m_time.start();
     m_timer.start(1000 / 60);
 
-    m_globalTime = 0;
-    m_t0 = std::chrono::high_resolution_clock::now();
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -78,6 +78,8 @@ void View::initializeGL() {
     m_quad->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->buildVAO();
+
+    m_camera->updateMatrices();
 }
 
 void View::paintGL() {
@@ -104,10 +106,15 @@ void View::resizeGL(int w, int h) {
     w = static_cast<int>(w / ratio);
     h = static_cast<int>(h / ratio);
     glViewport(0, 0, w, h);
+    //m_camera->setAspectRatio();
 }
 
 void View::mousePressEvent(QMouseEvent *event) {
-
+    if (event->button() == Qt::RightButton) {
+        m_camera->mouseDown(event->x(), event->y());
+        m_isDragging = true;
+        update();
+    }
 }
 
 void View::mouseMoveEvent(QMouseEvent *event) {
@@ -126,10 +133,19 @@ void View::mouseMoveEvent(QMouseEvent *event) {
 
         // TODO: Handle mouse movements here
     }
+
+    if (m_isDragging) {
+        m_camera->mouseDragged(event->x(), event->y());
+        update();
+    }
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event) {
-
+    if (m_isDragging && event->button() == Qt::RightButton) {
+            m_camera->mouseUp(event->x(), event->y());
+            m_isDragging = false;
+            update();
+    }
 }
 
 void View::keyPressEvent(QKeyEvent *event) {

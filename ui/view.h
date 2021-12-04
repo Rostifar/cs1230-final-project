@@ -6,7 +6,7 @@
 #include <QTime>
 #include <QTimer>
 #include "gl/openglshape.h"
-#include <chrono>
+#include "camera/OrbitingCamera.h"
 
 
 class View : public QGLWidget {
@@ -17,15 +17,20 @@ public:
     ~View();
 
 private:
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_t1;
-    float m_globalTime;
+    std::unique_ptr<OrbitingCamera> m_camera;
+    glm::vec4 m_cameraEye;
+    bool m_isDragging;
 
     QTime m_time;
     QTimer m_timer;
     bool m_captureMouse;
     GLuint m_program;
     std::unique_ptr<OpenGLShape> m_quad;
+
+
+
+    float m_oldPosX, m_oldPosY, m_oldPosZ;
+    float m_oldRotU, m_oldRotV, m_oldRotN;
 
     void initializeGL();
     void paintGL();

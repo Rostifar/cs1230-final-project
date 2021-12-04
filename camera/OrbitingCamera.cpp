@@ -19,7 +19,6 @@
 #include "glm/gtx/transform.hpp"
 
 #include "OrbitingCamera.h"
-#include "Settings.h"
 
 
 void OrbitingCamera::setAspectRatio(float aspectRatio) {
@@ -75,13 +74,13 @@ void OrbitingCamera::updateMatrices() {
 void OrbitingCamera::updateProjectionMatrix() {
     // Make sure glm gets a far value that is greater than the near value.
     // Thanks Windows for making far a keyword!
-    float farPlane = std::max(settings.cameraFar, settings.cameraNear + 100.f * FLT_EPSILON);
-    float h = farPlane * glm::tan(glm::radians(settings.cameraFov * 0.5f));
+    float farPlane = std::fmaxf(m_cameraFar, m_cameraNear + 100.f * FLT_EPSILON);
+    float h = farPlane * glm::tan(glm::radians(m_cameraFov * 0.5f));
     float w = m_aspectRatio * h;
 
     m_scaleMatrix = glm::scale(glm::vec3(1.f / w, 1.f / h, 1.f / farPlane));
     m_projectionMatrix = glm::perspective(
-            glm::radians(settings.cameraFov), m_aspectRatio, settings.cameraNear, farPlane) * 0.02f;
+            glm::radians(m_cameraFov), m_aspectRatio, m_cameraNear, farPlane) * 0.02f;
 }
 
 void OrbitingCamera::updateViewMatrix() {
