@@ -66,10 +66,10 @@ void View::initializeGL() {
 
     // vertex coordinates followed by uv
     std::vector<float> quad = {
-        -1,  1, 0, 0, 0,
-        -1, -1, 0, 0, 1,
-         1,  1, 0, 1, 0,
-         1, -1, 0, 1, 1
+        -1,  1, 0, 0, 1,
+        -1, -1, 0, 0, 0,
+         1,  1, 0, 1, 1,
+         1, -1, 0, 1, 0
     };
 
     // construct a fullscreen quad

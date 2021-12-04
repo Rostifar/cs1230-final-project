@@ -1,17 +1,11 @@
 #version 400
 
-in vec2 fragCoord;
+in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
 
 uniform float iTime;
 uniform vec2 iResolution;
-
-
-
-//void main() {
-//    color = vec3(0.5, 0.5, 0.5);
-//}
 
 
 #define SPHERE 0
@@ -181,8 +175,7 @@ void main() {
     vec3 cameraRight = normalize(cross(cameraForward, up));
     vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
 
-    // TODO [Task 1] Construct the ray direction vector
-    vec2 uv = vec2(gl_FragCoord.x / iResolution.x, gl_FragCoord.y / iResolution.y);
+    vec2 uv = vec2(fragUV.x, fragUV.y);
     uv.x = 2.f * uv.x - 1.f;
     uv.y = 2.f * uv.y - 1.f;
 
