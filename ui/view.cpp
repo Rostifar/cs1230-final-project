@@ -58,11 +58,29 @@ void View::initializeGL() {
 
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/raymarch.vert", ":/shaders/raymarch.frag");
+
+    float quad[8] = {
+        -1,  1,
+         1,  1,
+        -1, -1,
+         1, -1
+    };
+    float uv[8] = {
+        0.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f
+    };
+    CS123::GL::VBO m_vbo = VBO(&quad[0], 8, VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, 4);
 }
 
 void View::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_program);
+
+    glBindVertexArray(m_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
+    glBindVertexArray(0);
 }
 
 void View::resizeGL(int w, int h) {

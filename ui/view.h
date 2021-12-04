@@ -18,6 +18,8 @@ private:
     QTimer m_timer;
     bool m_captureMouse;
     GLuint m_program;
+    GLuint m_vao;
+    GLuint m_vbo;
 
     void initializeGL();
     void paintGL();
