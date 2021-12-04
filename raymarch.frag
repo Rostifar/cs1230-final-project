@@ -10,6 +10,7 @@ uniform vec2 iResolution;
 
 #define SPHERE 0
 #define PLANE 1
+#define MANDELBULB 3
 #define NO_INTERSECT 2
 #define DISPLACEMENT_FACTOR 0.1
 
@@ -50,12 +51,42 @@ float sdFloor(vec3 p) {
     return p.y;
 }
 
+float DE(vec3 p) {
+    vec3 z = p;
+    float dr = 1.0;
+    float r = 0.0;
+    float Bailout = 4.0;
+    int Iterations = 64;
+    float Power = 8;
+    for (int i = 0; i < Iterations ; i++) {
+            r = length(z);
+            if (r>Bailout) break;
+
+            // convert to polar coordinates
+            float theta = acos(z.z/r);
+            float phi = atan(z.y,z.x);
+            dr =  pow( r, Power-1.0)*Power*dr + 1.0;
+
+            // scale and rotate the point
+            float zr = pow( r,Power);
+            theta = theta*Power;
+            phi = phi*Power;
+
+            // convert back to cartesian coordinates
+            z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+            z+=p;
+    }
+    return 0.5*log(r)*r/dr;
+}
+
 PrimitiveDist map(vec3 p) {
     // TODO [Task 3] Implement distance map
-    float plane = sdFloor(p);
-    float sphere = sdTwistedSphere(p);
-    if (plane < sphere) return PrimitiveDist(plane, PLANE);
-    else return PrimitiveDist(sphere, SPHERE);
+//    float plane = sdFloor(p);
+//    float sphere = sdTwistedSphere(p);
+    float mandelbulb = DE(p);
+    return PrimitiveDist(mandelbulb, MANDELBULB);
+//    if (plane < sphere) return PrimitiveDist(plane, PLANE);
+//    else return PrimitiveDist(sphere, SPHERE);
 }
 
 // TODO [Task 4] Calculate surface normals

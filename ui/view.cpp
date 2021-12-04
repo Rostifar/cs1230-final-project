@@ -89,7 +89,7 @@ void View::paintGL() {
     GLint m_viewport[4];
     glGetIntegerv(GL_VIEWPORT, m_viewport);
 
-    assert(m_viewport[2] == width() && m_viewport[3] == height());
+    // assert(m_viewport[2] == width() && m_viewport[3] == height());
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
