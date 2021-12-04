@@ -27,7 +27,7 @@ SOURCES += ui/mainwindow.cpp \
     gl/datatype/VAO.cpp \
     gl/datatype/VBO.cpp \
     gl/datatype/VBOAttribMarker.cpp \
-    gl/quad.cpp \
+    gl/openglshape.cpp \
     gl/resourceloader.cpp \
     main.cpp \
     glew-1.10.0/src/glew.c \
@@ -40,8 +40,8 @@ HEADERS += ui/mainwindow.h \
     gl/datatype/VAO.h \
     gl/datatype/VBO.h \
     gl/datatype/VBOAttribMarker.h \
+    gl/openglshape.h \
     gl/shaders/ShaderAttribLocations.h \
-    gl/quad.h \
     gl/resourceloader.h \
     ui_mainwindow.h \
     glew-1.10.0/include/GL/glew.h \

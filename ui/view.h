@@ -5,6 +5,7 @@
 #include <qgl.h>
 #include <QTime>
 #include <QTimer>
+#include "gl/openglshape.h"
 
 class View : public QGLWidget {
     Q_OBJECT
@@ -18,8 +19,7 @@ private:
     QTimer m_timer;
     bool m_captureMouse;
     GLuint m_program;
-    GLuint m_vao;
-    GLuint m_vbo;
+    std::unique_ptr<OpenGLShape> m_quad;
 
     void initializeGL();
     void paintGL();

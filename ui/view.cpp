@@ -5,6 +5,8 @@
 #include <QKeyEvent>
 #include <iostream>
 #include "gl/resourceloader.h"
+#include "gl/openglshape.h"
+#include "gl/shaders/ShaderAttribLocations.h"
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_time(), m_timer(), m_captureMouse(false)
@@ -59,28 +61,26 @@ void View::initializeGL() {
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/raymarch.vert", ":/shaders/raymarch.frag");
 
-    float quad[8] = {
-        -1,  1,
-         1,  1,
-        -1, -1,
-         1, -1
+    // vertex coordinates followed by uv
+    std::vector<float> quad = {
+        -1,  1, 0,
+         -1, -1, 0,
+         1,  1, 0,
+         1, -1, 0
     };
-    float uv[8] = {
-        0.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f
-    };
-    CS123::GL::VBO m_vbo = VBO(&quad[0], 8, VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, 4);
+
+    m_quad = std::make_unique<OpenGLShape>();
+    m_quad->setVertexData(&quad[0], quad.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, quad.size() / 3);
+    m_quad->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    //m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    m_quad->buildVAO();
 }
 
 void View::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(m_program);
-
-    glBindVertexArray(m_vao);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
-    glBindVertexArray(0);
+    m_quad->draw();
+    glUseProgram(0);
 }
 
 void View::resizeGL(int w, int h) {
