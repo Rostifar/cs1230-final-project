@@ -1,6 +1,6 @@
 # Roadmap 
 
-- [ ] Port ray marching lab to QT (12.03.21)
+- [x] Port ray marching lab to QT (12.03.21)
 	+ Rendering quad to screen 
 	+ Add new vertex shader for quad 
 	+ Implement fragment shader for raymarching 
