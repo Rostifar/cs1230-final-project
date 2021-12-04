@@ -22,6 +22,7 @@ win32 {
 }
 
 SOURCES += ui/mainwindow.cpp \
+    camera/OrbitingCamera.cpp \
     gl/GLDebug.cpp \
     gl/datatype/IBO.cpp \
     gl/datatype/VAO.cpp \
@@ -35,6 +36,8 @@ SOURCES += ui/mainwindow.cpp \
     ui/viewformat.cpp
 
 HEADERS += ui/mainwindow.h \
+    camera/Camera.h \
+    camera/OrbitingCamera.h \
     gl/GLDebug.h \
     gl/datatype/IBO.h \
     gl/datatype/VAO.h \
