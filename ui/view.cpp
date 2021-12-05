@@ -7,6 +7,7 @@
 #include "gl/resourceloader.h"
 #include "gl/openglshape.h"
 #include "gl/shaders/ShaderAttribLocations.h"
+#include <glm/gtc/type_ptr.hpp>
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_time(), m_timer(), m_captureMouse(false), m_isDragging(false),
@@ -97,13 +98,14 @@ void View::paintGL() {
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
     glUniform1f(timeUniformLoc, 0.f);
 
-    GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
-    glUniform3f(camEyeUniformLoc, m_camera->);
+
+    GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
+    glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
 
 
-    uniform vec3 camEye;
-    uniform vec3 camUp;
-    uniform float focalLen;
+    //uniform vec3 camEye;
+    //uniform vec3 camUp;
+    //uniform float focalLen;
 
     m_quad->draw();
     glUseProgram(0);
@@ -155,6 +157,13 @@ void View::mouseReleaseEvent(QMouseEvent *event) {
             update();
     }
 }
+
+
+void View::wheelEvent(QWheelEvent *event) {
+    m_camera->mouseScrolled(event->delta());
+    update();
+}
+
 
 void View::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) QApplication::quit();

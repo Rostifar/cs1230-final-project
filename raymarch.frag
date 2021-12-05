@@ -6,10 +6,10 @@ layout(location = 0) out vec4 color;
 
 uniform float iTime;
 uniform vec2 iResolution;
-uniform vec3 camEye;
-uniform vec3 camUp;
-uniform float focalLen;
-uniform mat4 viewMatrix;
+//uniform vec3 camEye;
+//uniform vec3 camUp;
+//uniform float focalLen;
+uniform mat4 viewMat;
 
 
 #define SPHERE 0
@@ -177,7 +177,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 
     // TODO [Task 5] Assign different intersected objects with different materials
     // Make things pretty!
-    vec3 material = vec3(0.0);
+    //vec3 material = vec3(0.0);
 
     /*if (which == PLANE) {
         material = texCube(iChannel0, pos, nor);
@@ -188,27 +188,29 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     }*/
 
     // Blend the material color with the original color.
-    col = mix(col, material, 0.4);
+    //col = mix(col, material, 0.4);
 
     return col;
 }
 
 void main() {
-    vec3 rayOrigin = camEye;
-
-    float focalLength = focalLen;
+    //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
+    vec3 rayOrigin = vec3(viewMat[3][0], viewMat[3][1], viewMat[3][2]);
+    float focalLength = 2.f;
 
     // The target we are looking at
-    //vec3 target = vec3(0.0);
+    vec3 target = vec3(0.0);
+
     // Look vector
     vec3 look = normalize(rayOrigin - target);
+
     // Up vector
-    vec3 up = camUp;
+    //vec3 up = vec3(0, 1, 0);
 
     // Set up camera matrix
-    vec3 cameraForward = -look;
-    vec3 cameraRight = normalize(cross(cameraForward, up));
-    vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
+    vec3 cameraForward = vec3(viewMat[0][2], viewMat[1][2], viewMat[2][2]);
+    vec3 cameraRight = vec3(viewMat[0][0], viewMat[1][0], viewMat[2][0]);
+    vec3 cameraUp = vec3(viewMat[0][1], viewMat[1][1], viewMat[2][1]);
 
     vec2 uv = vec2(fragUV.x, fragUV.y);
     uv.x = 2.f * uv.x - 1.f;
@@ -218,6 +220,7 @@ void main() {
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
+    //rayDirection = normalize(vec3(inverse(viewMat) * vec4(rayDirection, 1.f)));
     rayDirection = normalize(rayDirection);
 
 
