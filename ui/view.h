@@ -6,7 +6,8 @@
 #include <QTime>
 #include <QTimer>
 #include "gl/openglshape.h"
-#include "camera/OrbitingCamera.h"
+#include "camera/SimpleCamera.h"
+#include "Mouse.h"
 
 
 class View : public QGLWidget {
@@ -17,7 +18,9 @@ public:
     ~View();
 
 private:
-    std::unique_ptr<OrbitingCamera> m_camera;
+    std::unique_ptr<SimpleCamera> m_camera;
+    std::unique_ptr<Mouse> m_mouse;
+
     glm::vec4 m_cameraEye;
     bool m_isDragging;
 

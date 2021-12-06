@@ -4,12 +4,33 @@ in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
 
-uniform float iTime;
 uniform vec2 iResolution;
-//uniform vec3 camEye;
+uniform vec3 camEye;
+uniform vec2 mousePos;
+
 //uniform vec3 camUp;
 //uniform float focalLen;
-uniform mat4 viewMat;
+
+mat4 rotY(float ang) {
+    float x = cos(ang);
+    float y = sin(ang);
+
+    return mat4(x, 0, y, 0,
+                0, 1, 0, 0,
+               -y, 0, x, 0,
+                0, 0, 0, 1);
+}
+
+mat4 rotX(float ang) {
+    float x = cos(ang);
+    float y = sin(ang);
+
+    return mat4(1, 0,  0, 0,
+                0, x, -y, 0,
+                0, y,  x, 0,
+                0, 0,  0, 1);
+}
+
 
 
 #define SPHERE 0
@@ -84,9 +105,8 @@ float DE(vec3 p) {
 }
 
 PrimitiveDist map(vec3 p) {
-    // TODO [Task 3] Implement distance map
-//    float plane = sdFloor(p);
-//    float sphere = sdTwistedSphere(p);
+    p = (rotX(-mousePos.x * 0.1) * rotY(mousePos.y * 0.1) * vec4(p, 1.0)).xyz;
+
     float mandelbulb = DE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
 //    if (plane < sphere) return PrimitiveDist(plane, PLANE);
@@ -195,22 +215,24 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 
 void main() {
     //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
-    vec3 rayOrigin = vec3(viewMat[3][0], viewMat[3][1], viewMat[3][2]);
     float focalLength = 2.f;
 
     // The target we are looking at
     vec3 target = vec3(0.0);
 
     // Look vector
-    vec3 look = normalize(rayOrigin - target);
+    vec3 look = normalize(camEye - target);
 
     // Up vector
-    //vec3 up = vec3(0, 1, 0);
+    vec3 up = vec3(0, 1, 0);
+    vec3 cameraForward = -look;
+    vec3 cameraRight = normalize(cross(cameraForward, up));
+    vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
 
     // Set up camera matrix
-    vec3 cameraForward = vec3(viewMat[0][2], viewMat[1][2], viewMat[2][2]);
-    vec3 cameraRight = vec3(viewMat[0][0], viewMat[1][0], viewMat[2][0]);
-    vec3 cameraUp = vec3(viewMat[0][1], viewMat[1][1], viewMat[2][1]);
+    //vec3 cameraForward = vec3(viewMat[0][2], viewMat[1][2], viewMat[2][2]);
+    //vec3 cameraRight = vec3(viewMat[0][0], viewMat[1][0], viewMat[2][0]);
+    //vec3 cameraUp = vec3(viewMat[0][1], viewMat[1][1], viewMat[2][1]);
 
     vec2 uv = vec2(fragUV.x, fragUV.y);
     uv.x = 2.f * uv.x - 1.f;
@@ -220,14 +242,13 @@ void main() {
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
-    //rayDirection = normalize(vec3(inverse(viewMat) * vec4(rayDirection, 1.f)));
     rayDirection = normalize(rayDirection);
 
 
-    PrimitiveDist rayMarchResult = raymarch(rayOrigin, rayDirection);
+    PrimitiveDist rayMarchResult = raymarch(camEye, rayDirection);
     vec3 col = vec3(0.0);
     if (rayMarchResult.primitive != NO_INTERSECT) {
-      col = render(rayOrigin, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
+      col = render(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
     }
 
     color = vec4(col, 1.0);

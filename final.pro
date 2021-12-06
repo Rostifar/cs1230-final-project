@@ -23,6 +23,7 @@ win32 {
 
 SOURCES += ui/mainwindow.cpp \
     camera/OrbitingCamera.cpp \
+    camera/SimpleCamera.cpp \
     gl/GLDebug.cpp \
     gl/datatype/IBO.cpp \
     gl/datatype/VAO.cpp \
@@ -32,12 +33,14 @@ SOURCES += ui/mainwindow.cpp \
     gl/resourceloader.cpp \
     main.cpp \
     glew-1.10.0/src/glew.c \
+    ui/Mouse.cpp \
     ui/view.cpp \
     ui/viewformat.cpp
 
 HEADERS += ui/mainwindow.h \
     camera/Camera.h \
     camera/OrbitingCamera.h \
+    camera/SimpleCamera.h \
     gl/GLDebug.h \
     gl/datatype/IBO.h \
     gl/datatype/VAO.h \
@@ -46,6 +49,7 @@ HEADERS += ui/mainwindow.h \
     gl/openglshape.h \
     gl/shaders/ShaderAttribLocations.h \
     gl/resourceloader.h \
+    ui/Mouse.h \
     ui_mainwindow.h \
     glew-1.10.0/include/GL/glew.h \
     ui/view.h \

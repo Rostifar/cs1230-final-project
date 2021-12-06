@@ -10,10 +10,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
-    m_time(), m_timer(), m_captureMouse(false), m_isDragging(false),
+    m_time(), m_timer(), m_captureMouse(true), m_isDragging(false),
     m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
 {
-    m_camera = std::unique_ptr<OrbitingCamera>(new OrbitingCamera);
+    m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -0.5f)));
+    m_mouse  = std::unique_ptr<Mouse>(new Mouse(glm::vec2(0.f)));
 
     // View needs all mouse move events, not just mouse drag events
     setMouseTracking(true);
@@ -31,8 +32,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 }
 
 View::~View()
-{
-}
+{}
 
 void View::initializeGL() {
     // All OpenGL initialization *MUST* be done during or after this
@@ -79,8 +79,6 @@ void View::initializeGL() {
     m_quad->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->buildVAO();
-
-    m_camera->updateMatrices();
 }
 
 void View::paintGL() {
@@ -95,12 +93,20 @@ void View::paintGL() {
     // assert(m_viewport[2] == width() && m_viewport[3] == height());
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
-    GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
-    glUniform1f(timeUniformLoc, 0.f);
+    //GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
+    //glUniform1f(timeUniformLoc, 0.f);
 
 
-    GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
-    glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    //GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
+    //glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+
+    GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
+    const glm::vec3 eye = m_camera->getEye();
+    glUniform3f(camEyeUniformLoc, eye.x, eye.y, eye.z);
+
+    GLint mousePosUniformLoc = glGetUniformLocation(m_program, "mousePos");
+    const glm::vec2 mousePos = m_mouse->getPos();
+    glUniform2f(mousePosUniformLoc, mousePos.x, mousePos.y);
 
 
     //uniform vec3 camEye;
@@ -121,9 +127,9 @@ void View::resizeGL(int w, int h) {
 
 void View::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
-        m_camera->mouseDown(event->x(), event->y());
-        m_isDragging = true;
-        update();
+        //m_camera->mouseDown(event->x(), event->y());
+        //m_isDragging = true;
+        //update();
     }
 }
 
@@ -140,22 +146,22 @@ void View::mouseMoveEvent(QMouseEvent *event) {
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
         QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-
-        // TODO: Handle mouse movements here
-    }
-
-    if (m_isDragging) {
-        m_camera->mouseDragged(event->x(), event->y());
+        m_mouse->translate(deltaX, deltaY);
         update();
     }
+
+    //if (m_isDragging) {
+    //    m_camera->mouseDragged(event->x(), event->y());
+    //    update();
+   // }
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event) {
-    if (m_isDragging && event->button() == Qt::RightButton) {
-            m_camera->mouseUp(event->x(), event->y());
-            m_isDragging = false;
-            update();
-    }
+    //if (m_isDragging && event->button() == Qt::RightButton) {
+    //        m_camera->mouseUp(event->x(), event->y());
+    //        m_isDragging = false;
+    //        update();
+    //}
 }
 
 
@@ -167,8 +173,6 @@ void View::wheelEvent(QWheelEvent *event) {
 
 void View::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) QApplication::quit();
-
-    // TODO: Handle keyboard presses here
 }
 
 void View::keyReleaseEvent(QKeyEvent *event) {
