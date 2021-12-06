@@ -8,9 +8,25 @@ uniform vec2 iResolution;
 uniform vec3 camEye;
 uniform vec2 mousePos;
 
-//uniform vec3 camUp;
-//uniform float focalLen;
+uniform float bailout;
+uniform float power;
+uniform int deIterations;
 
+uniform vec3 ambientColor;
+uniform vec3 specularColor;
+uniform vec3 diffuseColor;
+
+uniform bool useLighting;
+
+uniform vec3 bgColor;
+
+
+vec3 lights[1] = {vec3(1.0, 0.6, 0.5)};
+vec3 lightColors[1] = {vec3(1.f)};
+int numLights = 1;
+
+
+// transformation matrices used to reorient rays based on camera transforms
 mat4 rotY(float ang) {
     float x = cos(ang);
     float y = sin(ang);
@@ -35,87 +51,60 @@ mat4 rotX(float ang) {
 
 #define SPHERE 0
 #define PLANE 1
-#define MANDELBULB 3
 #define NO_INTERSECT 2
+#define MANDELBULB 3
 #define DISPLACEMENT_FACTOR 0.1
 
 // Data structure for raymarching results
 struct PrimitiveDist {
     float dist;
-    int primitive; // Can be SPHERE, PLANE, or NO_INTERSECT
+    int primitive;
+    int numSteps;
 };
 
-// Helper function for tri3.
-float tri(in float x) {
-        return abs(fract(x)-.5);
-}
 
-// Triangle noise. Use it as a sample displacement map for task 7.
-vec3 tri3(in vec3 p) {
-    return vec3(tri(p.z+tri(p.y*1.)),
-                tri(p.z+tri(p.x*1.)),
-                tri(p.y+tri(p.x*1.)));
-}
-
-// TODO [Task 8] Make a displacement map
-// You can check out tri3 above and the functions in the handout as inspiration
 float calcDisplacement(in vec3 p) {
     return cos(p.x - p.z);
 }
 
 
-// Signed distance to the twisted sphere.
-float sdTwistedSphere(vec3 p) {
-    vec3 spherePosition = vec3(0.0, 0.25, 0.0);
-    float radius = 1.5;
-    float primitive = length(p - spherePosition) - radius;
-    return primitive + calcDisplacement(p);
-}
-
-float sdFloor(vec3 p) {
-    return p.y;
-}
-
-float DE(vec3 p) {
+float mandelbulbDE(vec3 p) {
     vec3 z = p;
     float dr = 1.0;
     float r = 0.0;
-    float Bailout = 4.0;
-    int Iterations = 64;
-    float Power = 8;
-    for (int i = 0; i < Iterations ; i++) {
+    //int Iterations = 64;
+    //float Power = 8;
+    for (int i = 0; i < deIterations ; i++) {
             r = length(z);
-            if (r>Bailout) break;
+            if (r > bailout) break;
 
             // convert to polar coordinates
             float theta = acos(z.z/r);
             float phi = atan(z.y,z.x);
-            dr =  pow( r, Power-1.0)*Power*dr + 1.0;
+            dr =  pow(r, power - 1.f) * power * dr + 1.f;
 
             // scale and rotate the point
-            float zr = pow( r,Power);
-            theta = theta*Power;
-            phi = phi*Power;
+            float zr = pow(r, power);
+            theta = theta * power;
+            phi = phi * power;
 
             // convert back to cartesian coordinates
-            z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
-            z+=p;
+            z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
+            z += p;
     }
-    return 0.5*log(r)*r/dr;
+    return 0.5 * log(r) * r / dr;
 }
 
 PrimitiveDist map(vec3 p) {
+    // reorient point based on camera transformation
     p = (rotX(-mousePos.x * 0.1) * rotY(mousePos.y * 0.1) * vec4(p, 1.0)).xyz;
 
-    float mandelbulb = DE(p);
+    const float mandelbulb = mandelbulbDE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
-//    if (plane < sphere) return PrimitiveDist(plane, PLANE);
-//    else return PrimitiveDist(sphere, SPHERE);
 }
 
-// TODO [Task 4] Calculate surface normals
 const float epsilon = 0.001;
-vec2 e = vec2(epsilon, 0.0); // For swizzling
+vec2 e = vec2(epsilon, 0.0);
 vec3 calcNormal(vec3 p) {
     vec3 res = vec3(0.f);
     res.x = map(p + e.xyy).dist - map(p - e.xyy).dist;
@@ -145,9 +134,6 @@ float shadow(vec3 ro, vec3 rd, float k) {
 
 
 PrimitiveDist raymarch(vec3 ro, vec3 rd) {
-
-    // TODO [Task 2] Implement ray marching algorithm
-    // Fill in parameters
     float marchDist = 0.001;
     float boundingDist = 50.0;
     float threshold = 0.001;
@@ -163,7 +149,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
            break;
        }
        if (marchDist > boundingDist) {
-           res.dist = -1.f;
+           res.dist = marchDist;
            res.primitive = NO_INTERSECT;
            break;
        }
@@ -172,19 +158,19 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
     return res;
 }
 
-vec3 render(vec3 ro, vec3 rd, float t, int which) {
-
-    // Col is the final color of the current pixel.
-    vec3 col = vec3(0.);
+vec3 phong(vec3 ro, vec3 rd, float t, int numLights) {
     vec3 pos = ro + rd * t;
-    // Light vector
-    vec3 lig = normalize(vec3(1.0,0.6,0.5));
-
-    // Normal vector
     vec3 nor = calcNormal(pos);
 
+    for (int i = 0; i < numLights; i++) {
+        col =
+        vec3 l = normalize(lights[i]);
+        vec3 lColor = lightColors[i];
+        float diffuseIntensity = ;
+    }
+
     // Ambient
-    float ambient = 0.1;
+    float ambient = 0.1 * baseCol;
     // Diffuse
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
@@ -193,47 +179,22 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 
     float darkness = shadow(pos, lig, 18.0);
     // Applying the phong lighting model to the pixel.
-    col += vec3(((ambient + diffuse + specular) * darkness));
-
-    // TODO [Task 5] Assign different intersected objects with different materials
-    // Make things pretty!
-    //vec3 material = vec3(0.0);
-
-    /*if (which == PLANE) {
-        material = texCube(iChannel0, pos, nor);
-    } else if (which == SPHERE) {
-        material = texCube(iChannel1, pos, nor);
-    } else {
-        material = vec3(0.5);
-    }*/
-
-    // Blend the material color with the original color.
-    //col = mix(col, material, 0.4);
-
+    col *= vec3(((ambient + diffuse + specular) * darkness));
     return col;
 }
 
 void main() {
-    //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
     float focalLength = 2.f;
-
-    // The target we are looking at
     vec3 target = vec3(0.0);
-
-    // Look vector
     vec3 look = normalize(camEye - target);
-
-    // Up vector
     vec3 up = vec3(0, 1, 0);
+
+    // camra params
     vec3 cameraForward = -look;
     vec3 cameraRight = normalize(cross(cameraForward, up));
     vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
 
-    // Set up camera matrix
-    //vec3 cameraForward = vec3(viewMat[0][2], viewMat[1][2], viewMat[2][2]);
-    //vec3 cameraRight = vec3(viewMat[0][0], viewMat[1][0], viewMat[2][0]);
-    //vec3 cameraUp = vec3(viewMat[0][1], viewMat[1][1], viewMat[2][1]);
-
+    // construct ray based on camera params
     vec2 uv = vec2(fragUV.x, fragUV.y);
     uv.x = 2.f * uv.x - 1.f;
     uv.y = 2.f * uv.y - 1.f;
@@ -248,8 +209,9 @@ void main() {
     PrimitiveDist rayMarchResult = raymarch(camEye, rayDirection);
     vec3 col = vec3(0.0);
     if (rayMarchResult.primitive != NO_INTERSECT) {
-      col = render(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
-    }
+        if (useLighting) col = phong(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
+        else col = ambientColor + diffuseColor;
+    } else col = bgColor;
 
     color = vec4(col, 1.0);
 }

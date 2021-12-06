@@ -91,14 +91,7 @@ void View::paintGL() {
     glGetIntegerv(GL_VIEWPORT, m_viewport);
 
     // assert(m_viewport[2] == width() && m_viewport[3] == height());
-    glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
-
-    //GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
-    //glUniform1f(timeUniformLoc, 0.f);
-
-
-    //GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
-    //glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3])); 
 
     GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
     const glm::vec3 eye = m_camera->getEye();
@@ -108,10 +101,15 @@ void View::paintGL() {
     const glm::vec2 mousePos = m_mouse->getPos();
     glUniform2f(mousePosUniformLoc, mousePos.x, mousePos.y);
 
+    // uniforms for fractal generation
+    GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
+    glUniform1f(bailoutUniformLoc, 4.f);
 
-    //uniform vec3 camEye;
-    //uniform vec3 camUp;
-    //uniform float focalLen;
+    GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
+    glUniform1f(powerUniformLoc, 8.f);
+
+    GLint deIterationsUniformLoc = glGetUniformLocation(m_program, "deIterations");
+    glUniform1i(deIterationsUniformLoc, 64);
 
     m_quad->draw();
     glUseProgram(0);
