@@ -3,7 +3,21 @@
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
-vec4 orbit = vec4(10000.f);
+
+#define DIRECTION 0
+#define POINT     1
+
+
+float ka;
+float kd;
+float ks;
+
+
+struct Light {
+    vec3 position;
+    vec3 intensity;
+    int type;
+};
 
 
 uniform vec2 iResolution;
@@ -83,7 +97,7 @@ float DE(vec3 p) {
     float dr = 1.0;
     float r = 0.0;
     float Bailout = 2.0;
-    int Iterations = 64;
+    int Iterations = 32;
     float Power = 4;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
@@ -102,7 +116,7 @@ float DE(vec3 p) {
             // convert back to cartesian coordinates
             z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
             z+=p;
-            orbit = min(orbit, abs(vec4(z, dot(z, z))));
+            //orbit = min(orbit, abs(vec4(z, dot(z, z))));
     }
     return 0.5*log(r)*r/dr;
 }
