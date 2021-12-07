@@ -3,6 +3,8 @@
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
+vec4 orbit = vec4(10000.f);
+
 
 uniform vec2 iResolution;
 uniform vec3 camEye;
@@ -100,6 +102,7 @@ float DE(vec3 p) {
             // convert back to cartesian coordinates
             z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
             z+=p;
+            orbit = min(orbit, abs(vec4(z, dot(z, z))));
     }
     return 0.5*log(r)*r/dr;
 }
@@ -173,10 +176,12 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
     return res;
 }
 
+
+
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
 
     // Col is the final color of the current pixel.
-    vec3 col = vec3(numSteps / 1000 + 0.2, numSteps / 1000 + 0.1, numSteps / 1000 + 0.3);
+    vec3 col = vec3(pow(1 - float(numSteps) / 1000, 2));
     col = clamp(col, 0, 0.7);
     vec3 pos = ro + rd * t;
     // Light vector
@@ -195,9 +200,9 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
-    darkness = 1.f;
+    //darkness = 1.f;
     // Applying the phong lighting model to the pixel.
-    col = ((ambient + diffuse + specular) * darkness) * col;
+    col = (vec3(0.5, pow(1 - float(numSteps) / 1000, 5), 0.5) * (ambient + diffuse + specular) * darkness) * col;
 
     // TODO [Task 5] Assign different intersected objects with different materials
     // Make things pretty!
