@@ -31,7 +31,7 @@ mat4 rotX(float ang) {
                 0, 0,  0, 1);
 }
 
-
+int numSteps = 0;
 
 #define SPHERE 0
 #define PLANE 1
@@ -80,9 +80,9 @@ float DE(vec3 p) {
     vec3 z = p;
     float dr = 1.0;
     float r = 0.0;
-    float Bailout = 4.0;
+    float Bailout = 2.0;
     int Iterations = 64;
-    float Power = 8;
+    float Power = 4;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
             if (r>Bailout) break;
@@ -105,7 +105,7 @@ float DE(vec3 p) {
 }
 
 PrimitiveDist map(vec3 p) {
-    p = (rotX(-mousePos.x * 0.1) * rotY(mousePos.y * 0.1) * vec4(p, 1.0)).xyz;
+    p = (rotX(-mousePos.x * 0.1) * rotY(mousePos.y * 0.1) * rotY(0) * vec4(p, 1.0)).xyz;
 
     float mandelbulb = DE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
@@ -156,6 +156,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
     // Fill in the iteration count
     for (int i = 0; i < 1000; i++) {
+       numSteps += 1;
        res = map(ro + rd * marchDist);
 
        if (res.dist < threshold) {
@@ -175,25 +176,28 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
 
     // Col is the final color of the current pixel.
-    vec3 col = vec3(0.);
+    vec3 col = vec3(numSteps / 1000 + 0.2, numSteps / 1000 + 0.1, numSteps / 1000 + 0.3);
+    col = clamp(col, 0, 0.7);
     vec3 pos = ro + rd * t;
     // Light vector
-    vec3 lig = normalize(vec3(1.0,0.6,0.5));
+    vec3 lig = normalize(vec3(10.0,0.6,0.5) - pos);
 
     // Normal vector
     vec3 nor = calcNormal(pos);
 
     // Ambient
-    float ambient = 0.1;
+    float ambient = 0.8;
     // Diffuse
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
     float shineness = 32.0;
-    float specular = pow(clamp(dot(rd, reflect(lig, nor)), 0.0, 1.0), 32.0);
+    float specular = pow(clamp(dot(rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
+    //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
+    darkness = 1.f;
     // Applying the phong lighting model to the pixel.
-    col += vec3(((ambient + diffuse + specular) * darkness));
+    col = ((ambient + diffuse + specular) * darkness) * col;
 
     // TODO [Task 5] Assign different intersected objects with different materials
     // Make things pretty!

@@ -13,7 +13,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_time(), m_timer(), m_captureMouse(true), m_isDragging(false),
     m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
 {
-    m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -0.5f)));
+    m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -5.f)));
     m_mouse  = std::unique_ptr<Mouse>(new Mouse(glm::vec2(0.f)));
 
     // View needs all mouse move events, not just mouse drag events
