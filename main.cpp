@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QStyle>
+#include <QDesktopWidget>
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
@@ -15,6 +17,13 @@ int main(int argc, char *argv[])
         // it has been shown.
         w.setWindowState(w.windowState() | Qt::WindowFullScreen);
     }
+    w.resize(1000, 800);
+    w.setGeometry(QStyle::alignedRect(
+                      Qt::LeftToRight,
+                      Qt::AlignCenter,
+                      w.size(),
+                      qApp->desktop()->availableGeometry()
+                  ));
 
     return app.exec();
 }

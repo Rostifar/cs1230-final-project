@@ -179,11 +179,18 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
 
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
+    vec3 pos = ro + rd * t;
+
+    vec3 r = vec3(1, 0, 0);
+    vec3 g = vec3(0, 1, 0);
+    vec3 b = vec3(0, 0, 1);
 
     // Col is the final color of the current pixel.
-    vec3 col = vec3(pow(1 - float(numSteps) / 1000, 2));
-    col = clamp(col, 0, 0.7);
-    vec3 pos = ro + rd * t;
+    //vec3 col = vec3(pow(1 - float(numSteps) / 1000, 2));
+
+    float sum = dot(pos, pos);
+    vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
+    //col = clamp(col, 0, 0.7);
     // Light vector
     vec3 lig = normalize(vec3(10.0,0.6,0.5) - pos);
 
@@ -196,7 +203,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
     float shineness = 32.0;
-    float specular = pow(clamp(dot(rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
+    float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
     //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
@@ -255,7 +262,7 @@ void main() {
 
 
     PrimitiveDist rayMarchResult = raymarch(camEye, rayDirection);
-    vec3 col = vec3(0.0);
+    vec3 col = vec3(1.2) - vec3(float(numSteps) / 1000);
     if (rayMarchResult.primitive != NO_INTERSECT) {
       col = render(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
     }
