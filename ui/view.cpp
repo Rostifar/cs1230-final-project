@@ -9,6 +9,8 @@
 #include "gl/shaders/ShaderAttribLocations.h"
 #include <glm/gtc/type_ptr.hpp>
 
+extern const bool lowpowerMode;
+
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_time(), m_timer(), m_captureMouse(true), m_isDragging(false),
     m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
@@ -110,10 +112,8 @@ void View::paintGL() {
     const glm::vec2 mousePos = m_mouse->getPos();
     glUniform2f(mousePosUniformLoc, mousePos.x, mousePos.y);
 
-
-    //uniform vec3 camEye;
-    //uniform vec3 camUp;
-    //uniform float focalLen;
+    GLint lowpowerModeUniformLoc = glGetUniformLocation(m_program, "lowerpowerMode");
+    glUniform1i(lowpowerModeUniformLoc, lowpowerMode ? 1 : 0);
 
     m_quad->draw();
     glUseProgram(0);
@@ -143,7 +143,7 @@ void View::mouseMoveEvent(QMouseEvent *event) {
     // in that direction. Note that it is important to check that deltaX and
     // deltaY are not zero before recentering the mouse, otherwise there will
     // be an infinite loop of mouse move events.
-    if(m_captureMouse) {
+    if(m_captureMouse && !lowpowerMode) {
         int deltaX = event->x() - width() / 2;
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
@@ -168,8 +168,10 @@ void View::mouseReleaseEvent(QMouseEvent *event) {
 
 
 void View::wheelEvent(QWheelEvent *event) {
-    m_camera->mouseScrolled(event->delta());
-    update();
+    if(!lowpowerMode) {
+        m_camera->mouseScrolled(event->delta());
+        update();
+    }
 }
 
 
@@ -178,7 +180,6 @@ void View::keyPressEvent(QKeyEvent *event) {
 }
 
 void View::keyReleaseEvent(QKeyEvent *event) {
-
 }
 
 void View::tick() {

@@ -13,6 +13,9 @@ float kd;
 float ks;
 
 
+bool useCamera = false;
+
+
 struct Light {
     vec3 position;
     vec3 intensity;
@@ -23,6 +26,8 @@ struct Light {
 uniform vec2 iResolution;
 uniform vec3 camEye;
 uniform vec2 mousePos;
+
+uniform int lowpowerMode;
 
 //uniform vec3 camUp;
 //uniform float focalLen;
@@ -74,7 +79,7 @@ float DE(vec3 p) {
     float dr = 1.0;
     float r = 0.0;
     float Bailout = 2.0;
-    int Iterations = 128;
+    int Iterations = 32;
     float Power = 10;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
@@ -100,10 +105,13 @@ float DE(vec3 p) {
 
 PrimitiveDist map(vec3 p) {
     //p = (rotX((mousePos.y / iResolution.y) * 2 * 3.141592) * rotY(-(mousePos.x / iResolution.x) * 2 * 3.141592) * vec4(p, 1.0)).xyz;
-    p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
-    p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
+    if (lowpowerMode == 0) {
+        p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
+        p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
+    }
 
     float mandelbulb = DE(p);
+
     return PrimitiveDist(mandelbulb, MANDELBULB);
 //    if (plane < sphere) return PrimitiveDist(plane, PLANE);
 //    else return PrimitiveDist(sphere, SPHERE);

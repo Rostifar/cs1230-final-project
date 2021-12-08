@@ -3,6 +3,8 @@
 #include <QDesktopWidget>
 #include "mainwindow.h"
 
+extern const bool lowpowerMode = false;
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -17,7 +19,10 @@ int main(int argc, char *argv[])
         // it has been shown.
         w.setWindowState(w.windowState() | Qt::WindowFullScreen);
     }
-    w.resize(1200, 800);
+
+    if (lowpowerMode) {
+        w.resize(600, 400);
+    } else w.resize(1200, 800);
     w.setGeometry(QStyle::alignedRect(
                       Qt::LeftToRight,
                       Qt::AlignCenter,
