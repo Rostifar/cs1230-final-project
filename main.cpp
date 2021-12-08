@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         // it has been shown.
         w.setWindowState(w.windowState() | Qt::WindowFullScreen);
     }
-    w.resize(800, 600);
+    w.resize(1200, 800);
     w.setGeometry(QStyle::alignedRect(
                       Qt::LeftToRight,
                       Qt::AlignCenter,

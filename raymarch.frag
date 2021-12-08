@@ -74,8 +74,8 @@ float DE(vec3 p) {
     float dr = 1.0;
     float r = 0.0;
     float Bailout = 2.0;
-    int Iterations = 32;
-    float Power = 5;
+    int Iterations = 128;
+    float Power = 10;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
             if (r>Bailout) break;
@@ -100,8 +100,8 @@ float DE(vec3 p) {
 
 PrimitiveDist map(vec3 p) {
     //p = (rotX((mousePos.y / iResolution.y) * 2 * 3.141592) * rotY(-(mousePos.x / iResolution.x) * 2 * 3.141592) * vec4(p, 1.0)).xyz;
-    //p = (rotX(-(mousePos.y / iResolution.y) )  * rotY(0) * vec4(p, 1.0)).xyz;
-    //p = (rotY(-(mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
+    p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
+    p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
 
     float mandelbulb = DE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
@@ -201,10 +201,10 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     // Specular
     float shineness = 32.0;
     float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
-    specular = 0.f;
+    //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
-    darkness = 1.f;
+    //darkness = 1.f;
     // Applying the phong lighting model to the pixel.
     col = (vec3(0.5, pow(1 - float(numSteps) / 1000, 5), 0.5) * (ambient + diffuse + specular) * darkness) * col;
     //col += vec3((ambient + diffuse + specular) * darkness);
@@ -242,8 +242,8 @@ void main() {
     const float pi = 3.141592;
     vec3 newEye = camEye;
 
-    newEye.yz = newEye.yz * camEye.z * rotate2d(mix(0, pi / 2, mousePos.y / iResolution.y));
-    newEye.xz = newEye.xz * rotate2d(mix(-pi, pi, mousePos.x / iResolution.x)) +  vec2(target.x, target.z);
+    //newEye.yz = newEye.yz * camEye.z * rotate2d(mix(0, pi / 2, mousePos.y / iResolution.y));
+    //newEye.xz = newEye.xz * rotate2d(mix(-pi, pi, mousePos.x / iResolution.x)) +  vec2(target.x, target.z);
 
     // Look vector
     vec3 look = normalize(newEye - target);

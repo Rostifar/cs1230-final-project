@@ -148,7 +148,7 @@ void View::mouseMoveEvent(QMouseEvent *event) {
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
         QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-        m_mouse->translate(deltaX , deltaY );
+        m_mouse->translate(deltaX , deltaY);
         update();
     }
 
