@@ -14,6 +14,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
     m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
 {
     m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -5.f)));
+    //m_camera = std::unique_ptr<OrbitingCamera>(new OrbitingCamera());
     m_mouse  = std::unique_ptr<Mouse>(new Mouse(glm::vec2(0.f)));
 
     // View needs all mouse move events, not just mouse drag events
@@ -103,6 +104,7 @@ void View::paintGL() {
     GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
     const glm::vec3 eye = m_camera->getEye();
     glUniform3f(camEyeUniformLoc, eye.x, eye.y, eye.z);
+    //glUniform3f(camEyeUniformLoc, 0, 0, 0);
 
     GLint mousePosUniformLoc = glGetUniformLocation(m_program, "mousePos");
     const glm::vec2 mousePos = m_mouse->getPos();
@@ -126,11 +128,11 @@ void View::resizeGL(int w, int h) {
 }
 
 void View::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::RightButton) {
-        //m_camera->mouseDown(event->x(), event->y());
-        //m_isDragging = true;
-        //update();
-    }
+    /*if (event->button() == Qt::RightButton) {
+        m_camera->mouseDown(event->x(), event->y());
+        m_isDragging = true;
+        update();
+    }*/
 }
 
 void View::mouseMoveEvent(QMouseEvent *event) {
@@ -146,22 +148,22 @@ void View::mouseMoveEvent(QMouseEvent *event) {
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
         QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-        m_mouse->translate(deltaX, deltaY);
+        m_mouse->translate(deltaX , deltaY );
         update();
     }
 
-    //if (m_isDragging) {
-    //    m_camera->mouseDragged(event->x(), event->y());
-    //    update();
-   // }
+    /*if (m_isDragging) {
+        m_camera->mouseDragged(event->x(), event->y());
+        update();
+    }*/
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event) {
-    //if (m_isDragging && event->button() == Qt::RightButton) {
-    //        m_camera->mouseUp(event->x(), event->y());
-    //        m_isDragging = false;
-    //        update();
-    //}
+    /*if (m_isDragging && event->button() == Qt::RightButton) {
+            m_camera->mouseUp(event->x(), event->y());
+            m_isDragging = false;
+            update();
+    }*/
 }
 
 

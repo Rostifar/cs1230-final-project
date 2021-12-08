@@ -61,35 +61,12 @@ struct PrimitiveDist {
     int primitive; // Can be SPHERE, PLANE, or NO_INTERSECT
 };
 
-// Helper function for tri3.
-float tri(in float x) {
-        return abs(fract(x)-.5);
-}
-
-// Triangle noise. Use it as a sample displacement map for task 7.
-vec3 tri3(in vec3 p) {
-    return vec3(tri(p.z+tri(p.y*1.)),
-                tri(p.z+tri(p.x*1.)),
-                tri(p.y+tri(p.x*1.)));
-}
-
-// TODO [Task 8] Make a displacement map
-// You can check out tri3 above and the functions in the handout as inspiration
-float calcDisplacement(in vec3 p) {
-    return cos(p.x - p.z);
-}
-
-
-// Signed distance to the twisted sphere.
-float sdTwistedSphere(vec3 p) {
-    vec3 spherePosition = vec3(0.0, 0.25, 0.0);
-    float radius = 1.5;
-    float primitive = length(p - spherePosition) - radius;
-    return primitive + calcDisplacement(p);
-}
 
 float sdFloor(vec3 p) {
-    return p.y;
+    float h = 1;
+    float r = 0.5;
+    vec2 d = abs(vec2(length(p.xz),p.y)) - vec2(h,r);
+    return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
 float DE(vec3 p) {
@@ -98,7 +75,7 @@ float DE(vec3 p) {
     float r = 0.0;
     float Bailout = 2.0;
     int Iterations = 32;
-    float Power = 4;
+    float Power = 5;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
             if (r>Bailout) break;
@@ -122,12 +99,15 @@ float DE(vec3 p) {
 }
 
 PrimitiveDist map(vec3 p) {
-    p = (rotX(-mousePos.x * 0.1) * rotY(mousePos.y * 0.1) * rotY(0) * vec4(p, 1.0)).xyz;
+    //p = (rotX((mousePos.y / iResolution.y) * 2 * 3.141592) * rotY(-(mousePos.x / iResolution.x) * 2 * 3.141592) * vec4(p, 1.0)).xyz;
+    //p = (rotX(-(mousePos.y / iResolution.y) )  * rotY(0) * vec4(p, 1.0)).xyz;
+    //p = (rotY(-(mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
 
     float mandelbulb = DE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
 //    if (plane < sphere) return PrimitiveDist(plane, PLANE);
 //    else return PrimitiveDist(sphere, SPHERE);
+    //return PrimitiveDist(sdFloor(p), PLANE);
 }
 
 // TODO [Task 4] Calculate surface normals
@@ -195,15 +175,18 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
 
+    //vec3 col = vec3(0);
+
     vec3 r = vec3(1, 0, 0);
     vec3 g = vec3(0, 1, 0);
     vec3 b = vec3(0, 0, 1);
 
     // Col is the final color of the current pixel.
-    //vec3 col = vec3(pow(1 - float(numSteps) / 1000, 2));
+    vec3 col = vec3(pow(1 - float(numSteps) / 1000, 2));
 
     float sum = dot(pos, pos);
-    vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
+    //vec3 col = vec3(0);
+    //vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
     //col = clamp(col, 0, 0.7);
     // Light vector
     vec3 lig = normalize(vec3(10.0,0.6,0.5) - pos);
@@ -212,18 +195,19 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 nor = calcNormal(pos);
 
     // Ambient
-    float ambient = 0.8;
+    float ambient = 0.5;
     // Diffuse
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
     float shineness = 32.0;
     float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
-    //specular = 0.f;
+    specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
-    //darkness = 1.f;
+    darkness = 1.f;
     // Applying the phong lighting model to the pixel.
     col = (vec3(0.5, pow(1 - float(numSteps) / 1000, 5), 0.5) * (ambient + diffuse + specular) * darkness) * col;
+    //col += vec3((ambient + diffuse + specular) * darkness);
 
     // TODO [Task 5] Assign different intersected objects with different materials
     // Make things pretty!
@@ -243,6 +227,11 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     return col;
 }
 
+mat2 rotate2d(float theta) {
+  float s = sin(theta), c = cos(theta);
+  return mat2(c, -s, s, c);
+}
+
 void main() {
     //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
     float focalLength = 2.f;
@@ -250,8 +239,14 @@ void main() {
     // The target we are looking at
     vec3 target = vec3(0.0);
 
+    const float pi = 3.141592;
+    vec3 newEye = camEye;
+
+    newEye.yz = newEye.yz * camEye.z * rotate2d(mix(0, pi / 2, mousePos.y / iResolution.y));
+    newEye.xz = newEye.xz * rotate2d(mix(-pi, pi, mousePos.x / iResolution.x)) +  vec2(target.x, target.z);
+
     // Look vector
-    vec3 look = normalize(camEye - target);
+    vec3 look = normalize(newEye - target);
 
     // Up vector
     vec3 up = vec3(0, 1, 0);
@@ -275,10 +270,11 @@ void main() {
     rayDirection = normalize(rayDirection);
 
 
-    PrimitiveDist rayMarchResult = raymarch(camEye, rayDirection);
-    vec3 col = vec3(1.2) - vec3(float(numSteps) / 1000);
+    PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
+    //vec3 col = vec3(1.2) - vec3(float(numSteps) / 1000);
+    vec3 col = vec3(0);
     if (rayMarchResult.primitive != NO_INTERSECT) {
-      col = render(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
+      col = render(newEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
     }
 
     color = vec4(col, 1.0);
