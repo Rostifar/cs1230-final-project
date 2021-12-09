@@ -1,7 +1,27 @@
 #version 400
 
+
+#define MANDELBULB 1
+#define JULIABULB 2
+#define MENGERSPONGE 3
+#define NO_INTERSECT -1
+
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
+
+// uniforms for canvas and camera
+uniform vec2 iResolution;
+uniform vec3 camEye;
+uniform vec2 mousePos;
+
+// uniforms for debugging and testing
+uniform int lowpowerMode;
+
+// uniforms for rendering settings
+//uniform float ka;
+//uniform float kd;
+
+
 
 
 #define DIRECTION 0
@@ -22,15 +42,6 @@ struct Light {
     int type;
 };
 
-
-uniform vec2 iResolution;
-uniform vec3 camEye;
-uniform vec2 mousePos;
-
-uniform int lowpowerMode;
-
-//uniform vec3 camUp;
-//uniform float focalLen;
 
 mat4 rotY(float ang) {
     float x = cos(ang);
@@ -54,12 +65,6 @@ mat4 rotX(float ang) {
 
 int numSteps = 0;
 
-#define SPHERE 0
-#define PLANE 1
-#define MANDELBULB 3
-#define NO_INTERSECT 2
-#define DISPLACEMENT_FACTOR 0.1
-
 // Data structure for raymarching results
 struct PrimitiveDist {
     float dist;
@@ -78,16 +83,16 @@ float DE(vec3 p) {
     vec3 z = p;
     float dr = 1.0;
     float r = 0.0;
-    float Bailout = 2.0;
+    float Bailout = 2.8;
     int Iterations = 32;
-    float Power = 10;
+    float Power = 3.141592;
     for (int i = 0; i < Iterations ; i++) {
             r = length(z);
             if (r>Bailout) break;
 
             // convert to polar coordinates
-            float theta = acos(z.z/r);
-            float phi = atan(z.y,z.x);
+            float theta = acos(z.z/r); // 
+            float phi = atan(z.y,z.x); // 
             dr =  pow( r, Power-1.0)*Power*dr + 1.0;
 
             // scale and rotate the point
@@ -100,7 +105,7 @@ float DE(vec3 p) {
             z+=p;
             //orbit = min(orbit, abs(vec4(z, dot(z, z))));
     }
-    return 0.5*log(r)*r/dr;
+    return (0.5*log(r)*r/dr);
 }
 
 PrimitiveDist map(vec3 p) {
@@ -131,11 +136,11 @@ vec3 calcNormal(vec3 p) {
 
 float shadow(vec3 ro, vec3 rd, float k) {
     float marchDist = 0.001;
-    float boundingVolume = 25.0;
+    float boundingVolume = 100.0;
     float darkness = 1.0;
     float threshold = 0.001;
 
-    for(int i = 0; i < 30; i++) {
+    for(int i = 0; i < 10; i++) {
         if(marchDist > boundingVolume) continue;
         float h = map(ro + rd * marchDist).dist;
         // TODO [Task 7] Modify the loop to implement soft shadows
@@ -154,7 +159,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
     // TODO [Task 2] Implement ray marching algorithm
     // Fill in parameters
     float marchDist = 0.001;
-    float boundingDist = 50.0;
+    float boundingDist = 20.0;
     float threshold = 0.001;
 
     PrimitiveDist res;
@@ -179,7 +184,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 }
 
 
-
+// TODO: revamp this function
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
 
@@ -200,21 +205,28 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 lig = normalize(vec3(10.0,0.6,0.5) - pos);
 
     // Normal vector
-    vec3 nor = calcNormal(pos);
+    //vec3 nor = calcNormal(pos);
 
     // Ambient
-    float ambient = 0.5;
+    float ambient = 0.8;
     // Diffuse
-    float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
+    //float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
-    float shineness = 32.0;
-    float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
+    //float shineness = 32.0;
+    //float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
     //specular = 0.f;
-
-    float darkness = shadow(pos, lig, 18.0);
+    
+    //float darkness = shadow(pos, lig, 18.0);
     //darkness = 1.f;
     // Applying the phong lighting model to the pixel.
-    col = (vec3(0.5, pow(1 - float(numSteps) / 1000, 5), 0.5) * (ambient + diffuse + specular) * darkness) * col;
+    
+    /**
+    - hit position on fractal, what should its color be: formula? 
+    - ka, ks, kd; light colors 
+    - ambient occlusion 
+    - anti-aliasing 
+    */
+    col = (vec3(0.5, pow(1 - float(numSteps) / 1000, 5), 0.5) * (0 + 0 + 0) * 0) * col;
     //col += vec3((ambient + diffuse + specular) * darkness);
 
     // TODO [Task 5] Assign different intersected objects with different materials
@@ -241,31 +253,22 @@ mat2 rotate2d(float theta) {
 }
 
 void main() {
-    //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
     float focalLength = 2.f;
 
-    // The target we are looking at
+    // scene parameters..fixed for convenience
     vec3 target = vec3(0.0);
-
-    const float pi = 3.141592;
-    vec3 newEye = camEye;
-
-    //newEye.yz = newEye.yz * camEye.z * rotate2d(mix(0, pi / 2, mousePos.y / iResolution.y));
-    //newEye.xz = newEye.xz * rotate2d(mix(-pi, pi, mousePos.x / iResolution.x)) +  vec2(target.x, target.z);
-
-    // Look vector
-    vec3 look = normalize(newEye - target);
-
-    // Up vector
+    vec3 look = normalize(camEye - target);
     vec3 up = vec3(0, 1, 0);
+
+    // camera params
     vec3 cameraForward = -look;
     vec3 cameraRight = normalize(cross(cameraForward, up));
     vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
 
-    // Set up camera matrix
-    //vec3 cameraForward = vec3(viewMat[0][2], viewMat[1][2], viewMat[2][2]);
-    //vec3 cameraRight = vec3(viewMat[0][0], viewMat[1][0], viewMat[2][0]);
-    //vec3 cameraUp = vec3(viewMat[0][1], viewMat[1][1], viewMat[2][1]);
+    if (lowpowerMode == 0) {
+        //p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
+        //p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
+    }
 
     vec2 uv = vec2(fragUV.x, fragUV.y);
     uv.x = 2.f * uv.x - 1.f;
@@ -278,12 +281,11 @@ void main() {
     rayDirection = normalize(rayDirection);
 
 
-    PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
-    //vec3 col = vec3(1.2) - vec3(float(numSteps) / 1000);
-    vec3 col = vec3(0);
+    // perform raymarching and color hit point
+    PrimitiveDist rayMarchResult = raymarch(camEye, rayDirection);
+    vec3 col = vec3(0.1, 0, 0.1);
     if (rayMarchResult.primitive != NO_INTERSECT) {
-      col = render(newEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
+      col = render(camEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
     }
-
     color = vec4(col, 1.0);
 }

@@ -169,7 +169,7 @@ void View::mouseReleaseEvent(QMouseEvent *event) {
 
 void View::wheelEvent(QWheelEvent *event) {
     if(!lowpowerMode) {
-        m_camera->mouseScrolled(event->delta());
+        m_camera->mouseScrolled(event->delta() * 0.5);
         update();
     }
 }
