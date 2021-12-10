@@ -24,7 +24,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 
     // Hide the cursor
     if (m_captureMouse) {
-        QApplication::setOverrideCursor(Qt::BlankCursor);
+        // QApplication::setOverrideCursor(Qt::BlankCursor);
     }
 
     // View needs keyboard focus
@@ -144,12 +144,12 @@ void View::mouseMoveEvent(QMouseEvent *event) {
     // deltaY are not zero before recentering the mouse, otherwise there will
     // be an infinite loop of mouse move events.
     if(m_captureMouse && !lowpowerMode) {
-        int deltaX = event->x() - width() / 2;
-        int deltaY = event->y() - height() / 2;
-        if (!deltaX && !deltaY) return;
-        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-        m_mouse->translate(deltaX , deltaY);
-        update();
+//        int deltaX = event->x() - width() / 2;
+//        int deltaY = event->y() - height() / 2;
+//        if (!deltaX && !deltaY) return;
+//        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
+//        m_mouse->translate(deltaX , deltaY);
+//        update();
     }
 
     /*if (m_isDragging) {
