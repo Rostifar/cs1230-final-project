@@ -85,7 +85,7 @@ void View::initializeGL() {
 
 void View::moveLightingUniforms() {
     GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
-    glUniform1f(kaUniformLoc, 0.1f);
+    glUniform1f(kaUniformLoc, 0.2f);
 
     GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
     glUniform1f(kdUniformLoc, 1.f);
@@ -97,7 +97,7 @@ void View::moveLightingUniforms() {
     glUniform1f(krUniformLoc, 1.f);
 
     GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
-    glUniform1i(useLightingUniformLoc, 2);
+    glUniform1i(useLightingUniformLoc, 1);
 }
 
 void View::moveColoringUniforms() {
@@ -128,16 +128,16 @@ void View::moveColoringUniforms() {
 
 void View::moveFractalUniforms() {
     GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
-    glUniform1f(powerUniformLoc, 8.f);
+    glUniform1f(powerUniformLoc, 10.f);
 
     GLint raymarchStepsUniformLoc = glGetUniformLocation(m_program, "raymarchSteps");
-    glUniform1i(raymarchStepsUniformLoc, 1000);
+    glUniform1i(raymarchStepsUniformLoc, 500);
 
     GLint fractalIterationsUniformLoc = glGetUniformLocation(m_program, "fractalIterations");
     glUniform1i(fractalIterationsUniformLoc, 30);
 
     GLint stepFactorUniformLoc = glGetUniformLocation(m_program, "stepFactor");
-    glUniform1f(stepFactorUniformLoc, 0.3f);
+    glUniform1f(stepFactorUniformLoc, 0.2f);
 
     GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
     glUniform1f(bailoutUniformLoc, 4.f);

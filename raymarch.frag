@@ -110,7 +110,13 @@ vec3 calcOrbitTrapColor() {
     return clamp(mix(fractalBaseColor, 3 * orbitColor,  orbitMix), 0, 1);
 }
 
-float DE(vec3 p) {
+float sdBox( vec3 p, vec3 b )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+float mandelbulbDE(vec3 p) {
     vec3 z   = p;
     float dr = 1.0;
     float r  = 0.0;
@@ -130,25 +136,27 @@ float DE(vec3 p) {
 
             // convert back to cartesian coordinates
             z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
-            z += cos(iTime) * p;
+            z += p;
             orbitTrap = min(orbitTrap, abs(vec4(z.x, z.y, z.z, r * r)));
     }
     return 0.2f * log(r) * r / dr;
 }
 
-float juliaSDF(vec3 pos) {
-        //if(!isLight) orbitTrap = vec4(MAX_DIST);
-        vec4 p = vec4(pos, 0.0);
-        vec4 dp = vec4(1.0,0.0,0.0,0.0);
+float juliaDE(vec3 pos) {
+        vec4 q1 = vec4(pos, 0.0);
+        vec4 q2 = vec4(1.0, 0.0, 0.0, 0.0);
         for (int i = 0; i < fractalIterations; i++) {
-                dp = clamp(sin(iTime) * 2.0, 0.1, 2) * vec4(p.x*dp.x-dot(p.yzw, dp.yzw), p.x*dp.yzw+dp.x*p.yzw+cross(p.yzw, dp.yzw));
-                p = vec4(p.x * p.x-dot(p.yzw, p.yzw), vec3(2.0* p.x * p.yzw)) + cos(iTime);
-                float p2 = dot(p,p);
-                orbitTrap = min(orbitTrap, abs(vec4(p.xyz,p2)));
-                if (p2 > bailout) break;
+            // quaternion multiplication
+            q2 = 2.f * vec4(q1.x * q2.x - dot(q1.yzw, q2.yzw), q1.x * q2.yzw + q2.x * q1.yzw + cross(q1.yzw, q2.yzw));
+
+            // quaternion sqrt
+            q1 = vec4(q1.x * q1.x - dot(q1.yzw, q1.yzw), vec3(2.f * q1.x * q1.yzw)) + cos(iTime);
+            float pDelta = dot(q1, q1);
+            orbitTrap = min(orbitTrap, abs(vec4(q1.xyz, pDelta)));
+            if (pDelta > bailout) break;
         }
-        float r = length(p);
-        return  0.2 * r * log(r) / length(dp);
+        float r = length(q1);
+        return  0.2 * r * log(r) / length(q2);
 }
 
 float mandelboxSDF(vec3 pos) {
@@ -172,7 +180,7 @@ float mandelboxSDF(vec3 pos) {
 }
 
 PrimitiveDist map(vec3 p) {
-    float mandelbulb = DE(p);
+    float mandelbulb = mandelboxSDF(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
 }
 
@@ -231,19 +239,23 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
+    //vec3 col = mix(calcOrbitTrapColor(), vec3(0), 1 - exp(-0.05 * numSteps / raymarchSteps));
     vec3 col = calcOrbitTrapColor();
     //vec3 col = vec3(cos(iTime), 0, sin(iTime));
 
     if (useLighting == USE_LIGHTING) {
-        vec3 lig = normalize(vec3(5.0, 5.0, 5.0) - pos);
+        vec3 lig1 = normalize(vec3(0.f) - pos);
+        vec3 lig2 = normalize(vec3(-5.0, -5.0, -5.0) - pos);
+
         vec3 nor = calcNormal(pos);
 
-        float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
+        float diffuse = clamp(dot(nor, lig1), 0.0, 1.0) + clamp(dot(nor, lig2), 0.f, 1.f);
         float shineness = 32.0;
-        float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), shineness);
-        //specular = 0.f;
+        float specular = pow(clamp(dot(-rd, reflect(lig1, nor)), 0.0, 1.0), shineness);
+        specular += pow(clamp(dot(-rd, reflect(lig2, nor)), 0.0, 1.0), shineness);
 
-        float darkness = shadow(pos, lig, 18.0);
+        float darkness = shadow(pos, lig1, 18.0);
+
         //darkness = 1.f;
         col = (ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col;
     }
@@ -251,7 +263,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 }
 
 vec4 renderBackground() {
-    return mix(vec4(0.f), vec4(0.2f), max(1 - numSteps / 300, 0));
+    return mix(vec4(0.f), vec4(1.f), numSteps / 1000);
 }
 
 void main() {
@@ -262,7 +274,7 @@ void main() {
     //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
     //newEye = vec3(sin(iTime) * abs(10 - iTime / 5), 0, cos(iTime) * abs(10 - iTime / 5));
-
+    newEye =  vec3(sin(iTime) * 10, sin(iTime) * 20, cos(iTime) * 10);
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);
@@ -284,13 +296,13 @@ void main() {
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
 
-    rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
+    /*rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = normalize(rayDirection);
 
     newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-
+*/
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
     if (rayMarchResult.primitive != NO_INTERSECT) {
