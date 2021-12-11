@@ -85,13 +85,62 @@ void View::initializeGL() {
 
 void View::moveLightingUniforms() {
     GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
-    glUniform1f(kaUniformLoc, 1.f);
+    glUniform1f(kaUniformLoc, 0.1f);
 
     GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
     glUniform1f(kdUniformLoc, 1.f);
 
     GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
     glUniform1f(ksUniformLoc, 1.f);
+
+    GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
+    glUniform1f(krUniformLoc, 1.f);
+
+    GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
+    glUniform1i(useLightingUniformLoc, 2);
+}
+
+void View::moveColoringUniforms() {
+    GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
+    glUniform3f(ambientColorUniformLoc, 0.3f, 0.9f, 0.5f);
+
+    GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
+    glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);
+
+    GLint xTrapColorUniformLoc = glGetUniformLocation(m_program, "xTrapColor");
+    glUniform4f(xTrapColorUniformLoc, 0.2f, 0.2f, 0.2f, 0.0f);
+
+    GLint yTrapColorUniformLoc = glGetUniformLocation(m_program, "yTrapColor");
+    glUniform4f(yTrapColorUniformLoc, 0.f, 1.f, 0.f, 1.f);
+
+    GLint zTrapColorUniformLoc = glGetUniformLocation(m_program, "zTrapColor");
+    glUniform4f(zTrapColorUniformLoc, 0.3f, 0.9f, 0.f, 1.f);
+
+    GLint originTrapColorUniformLoc = glGetUniformLocation(m_program, "originTrapColor");
+    glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 1.f);
+
+    GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
+    glUniform1f(orbitMixUniformLoc, 1.f);
+
+    GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
+    glUniform1f(stepMixUniformLoc, 1.f);
+}
+
+void View::moveFractalUniforms() {
+    GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
+    glUniform1f(powerUniformLoc, 8.f);
+
+    GLint raymarchStepsUniformLoc = glGetUniformLocation(m_program, "raymarchSteps");
+    glUniform1i(raymarchStepsUniformLoc, 1000);
+
+    GLint fractalIterationsUniformLoc = glGetUniformLocation(m_program, "fractalIterations");
+    glUniform1i(fractalIterationsUniformLoc, 30);
+
+    GLint stepFactorUniformLoc = glGetUniformLocation(m_program, "stepFactor");
+    glUniform1f(stepFactorUniformLoc, 0.3f);
+
+    GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
+    glUniform1f(bailoutUniformLoc, 4.f);
 }
 
 
@@ -106,6 +155,7 @@ void View::paintGL() {
 
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
+    // TODO: do we really need to change these all of the time?
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
     glUniform1f(timeUniformLoc, m_accTime);
 
@@ -121,11 +171,10 @@ void View::paintGL() {
     glUniform1i(lowpowerModeUniformLoc, lowpowerMode ? 1 : 0);
 
     moveLightingUniforms();
-
+    moveColoringUniforms();
+    moveFractalUniforms();
     GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
     glUniform1i(freeViewUniformLoc, 1);
-
-
 
     m_quad->draw();
     glUseProgram(0);

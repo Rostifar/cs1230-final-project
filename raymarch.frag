@@ -13,6 +13,12 @@
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
+struct Light {
+    vec3 position;
+    vec3 intensity;
+    int type;
+};
+
 
 // constants
 const float rayMarchEps     = 0.001;
@@ -22,6 +28,10 @@ const float orbitTrapRadius = 1e4;
 
 const float minDist = 0.f;
 const float maxDist = 50.f;
+
+// global variables
+int numSteps = 0;
+
 
 //float power = 8;
 //int fractalIterations = 30;
@@ -52,34 +62,28 @@ uniform float ka;
 uniform float ks;
 uniform float kd;
 uniform float kr; // TODO
-
+uniform int   useLighting; /* {0, 1} */
 
 // coloring values
-uniform vec3 ambientColor;
+uniform vec3 ambientColor;     /* [0, 1]^3 */
 uniform vec3 fractalBaseColor; /* [0, 1]^3 */
 uniform vec4 xTrapColor;       /* [0, 1]^4 */
 uniform vec4 yTrapColor;       /* [0, 1]^4 */
+uniform vec4 zTrapColor;       /* [0, 1]^4 */
 uniform vec4 originTrapColor;  /* [0, 1]^4 */
 
 uniform float orbitMix; /* [0, 1] */
 uniform float stepMix;  /* [0, 1] */
-uniform int   useLighting; /* {0, 1} */
 
 // fractal values
 uniform float power;           /* [1, 28] */
 uniform int raymarchSteps;     /* [500, 1229] */
-uniform int fractaliterations; /* [1, 40] */
-
-
-//struct Light {
-//    vec3 position;
-//    vec3 intensity;
-//    int type;
-//};
+uniform int fractalIterations; /* [1, 40] */
+uniform float stepFactor;      /* (0, 1] */
+uniform float bailout;
 
 
 // <-------
-
 mat4 rotY(float ang) {
     float x = cos(ang);
     float y = sin(ang);
@@ -99,10 +103,7 @@ mat4 rotX(float ang) {
                 0, y,  x, 0,
                 0, 0,  0, 1);
 }
-
 // ------->
-
-int numSteps = 0;
 
 
 // Data structure for raymarching results
@@ -112,49 +113,39 @@ struct PrimitiveDist {
 };
 
 
-float sdFloor(vec3 p) {
-    float h = 1;
-    float r = 0.5;
-    vec2 d = abs(vec2(length(p.xz),p.y)) - vec2(h,r);
-    return min(max(d.x,d.y),0.0) + length(max(d,0.0));
-}
-
 vec3 calcOrbitTrapColor() {
-        orbitTrap.w = sqrt(orbitTrap.w);
-        vec3 orbitColor = xColor.xyz * xColor.w * orbitTrap.x +
-                          yColor.xyz * yColor.w * orbitTrap.y +
-                          zColor.xyz * zColor.w * orbitTrap.z +
-                          originColor.xyz * originColor.w * orbitTrap.w;
-        return mix(baseColor, 3 * orbitColor,  orbitMix);
+    orbitTrap.w = sqrt(orbitTrap.w);
+    vec3 orbitColor = xTrapColor.xyz * xTrapColor.w * orbitTrap.x +
+                      yTrapColor.xyz * yTrapColor.w * orbitTrap.y +
+                      zTrapColor.xyz * zTrapColor.w * orbitTrap.z +
+                      originTrapColor.xyz * originTrapColor.w * orbitTrap.w;
+    return mix(fractalBaseColor, 3 * orbitColor,  orbitMix);
 }
 
 float DE(vec3 p) {
-    vec3 z = p;
+    vec3 z   = p;
     float dr = 1.0;
-    float r = 0.0;
-    float Bailout = 4.0;
-    int Iterations = 30;
-    float Power = 10;
-    for (int i = 0; i < fractalIterations ; i++) {
+    float r  = 0.0;
+    for (int i = 0; i < 30; i++) {
             r = length(z);
-            if (r>Bailout) break;
+            if (r > 4) break;
 
             // convert to polar coordinates
             float theta = acos(z.z/r);
             float phi = atan(z.y,z.x);
-            dr =  pow( r, Power-1.0)*Power*dr + 1.0;
+            dr =  pow(r, power - 1.0) * 8 * dr + 1.0f;
 
             // scale and rotate the point
-            float zr = pow( r,Power);
-            theta = theta*Power;
-            phi = phi*Power;
+            float zr = pow(r, 8);
+            theta = theta * 8;
+            phi = phi * 8;
 
             // convert back to cartesian coordinates
-            z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
-            z+=p;
-            orbitTrap = min(orbitTrap, abs(vec4(z.x,z.y,z.z,r*r)));
+            z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
+            z += p;
+            orbitTrap = min(orbitTrap, abs(vec4(z.x, z.y, z.z, r * r)));
     }
-    return 0.2*log(r)*r/dr;
+    return 0.2f * log(r) * r / dr;
 }
 
 PrimitiveDist map(vec3 p) {
@@ -198,12 +189,11 @@ float shadow(vec3 ro, vec3 rd, float k) {
 
 PrimitiveDist raymarch(vec3 ro, vec3 rd) {
     float marchDist = 0.001;
-    float boundingDist = 20.0;
+    float boundingDist = 50.0;
 
     PrimitiveDist res;
-
     vec3 p = ro + rd * marchDist;
-    for (int i = 0; i < raymarchSteps; i++) {
+    for (int i = 0; i < 1000; i++) {
         numSteps += 1;
         res = map(ro + rd * marchDist);
         if (res.dist < rayMarchEps) {
@@ -215,37 +205,35 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
             res.primitive = NO_INTERSECT;
             break;
         }
-        marchDist += res.dist * 0.2;
+        marchDist += res.dist * stepFactor;
     }
     return res;
 }
 
 
-
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
-
     vec3 col = calcOrbitTrapColor();
 
     if (useLighting == USE_LIGHTING) {
-        vec3 lig = normalize(vec3(0,0,0.5) - pos);
-
-        // Normal vector
+        vec3 lig = normalize(vec3(0.0, 0.0, 0.0) - pos);
         vec3 nor = calcNormal(pos);
 
-        float ambient = 0.1;
         float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
         float shineness = 32.0;
-        float specular = pow(clamp(dot(pos - camEye, reflect(lig, nor)), 0.0, 1.0), 32.0);
-        specular = 0.f;
+        float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), shineness);
+        //specular = 0.f;
 
         float darkness = shadow(pos, lig, 18.0);
         darkness = 1.f;
-        // Applying the phong lighting model to the pixel.
         col = (ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col;
-
     }
     return clamp(col, 0, 1);
+}
+
+vec4 renderBackground() {
+    //return mix(vec4(0.f), vec4(1.f), numSteps / 1000);
+    return vec4(0, 0, 0, 1.f);
 }
 
 void main() {
@@ -277,6 +265,6 @@ void main() {
     if (rayMarchResult.primitive != NO_INTERSECT) {
       color = vec4(render(newEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive), 1);
     } else {
-      color = mix(vec4(0.f), vec4(1.f), numSteps / 90);
+      color = renderBackground();
     }
 }

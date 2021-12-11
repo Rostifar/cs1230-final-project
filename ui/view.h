@@ -39,6 +39,8 @@ private:
     void resizeGL(int w, int h);
 
     void moveLightingUniforms();
+    void moveColoringUniforms();
+    void moveFractalUniforms();
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);

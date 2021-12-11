@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     if (lowpowerMode) {
         w.resize(600, 400);
-    } else w.resize(1200, 800);
+    } else w.resize(800, 800);
     w.setGeometry(QStyle::alignedRect(
                       Qt::LeftToRight,
                       Qt::AlignCenter,
