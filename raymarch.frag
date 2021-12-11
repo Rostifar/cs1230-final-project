@@ -150,6 +150,8 @@ float DE(vec3 p) {
 
 PrimitiveDist map(vec3 p) {
     if (lowpowerMode == USE_LOWPOWER_MODE) {
+        //p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
+        //p = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(p, 1.0)).xyz;
 
     }
 
@@ -212,7 +214,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
-    vec3 col = vec3(1, 1, 1);
+    vec3 col = calcOrbitTrapColor();
 
     if (useLighting == USE_LIGHTING) {
         vec3 lig = normalize(vec3(5.0, 5.0, 5.0));
@@ -237,10 +239,11 @@ vec4 renderBackground() {
 
 void main() {
     const float focalLength = 2.f;
-    vec3 newEye = camEye;
 
-    newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
-    newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
+    // transform camera eye so that it matches global position
+    vec3 newEye = camEye;
+    //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
+    //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);
@@ -261,7 +264,12 @@ void main() {
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
+    rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
+    rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = normalize(rayDirection);
+    newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
+    newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
+
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
     if (rayMarchResult.primitive != NO_INTERSECT) {
