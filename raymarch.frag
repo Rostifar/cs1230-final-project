@@ -130,10 +130,45 @@ float DE(vec3 p) {
 
             // convert back to cartesian coordinates
             z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
-            z += p;
+            z += cos(iTime) * p;
             orbitTrap = min(orbitTrap, abs(vec4(z.x, z.y, z.z, r * r)));
     }
     return 0.2f * log(r) * r / dr;
+}
+
+float juliaSDF(vec3 pos) {
+        //if(!isLight) orbitTrap = vec4(MAX_DIST);
+        vec4 p = vec4(pos, 0.0);
+        vec4 dp = vec4(1.0,0.0,0.0,0.0);
+        for (int i = 0; i < fractalIterations; i++) {
+                dp = clamp(sin(iTime) * 2.0, 0.1, 2) * vec4(p.x*dp.x-dot(p.yzw, dp.yzw), p.x*dp.yzw+dp.x*p.yzw+cross(p.yzw, dp.yzw));
+                p = vec4(p.x * p.x-dot(p.yzw, p.yzw), vec3(2.0* p.x * p.yzw)) + cos(iTime);
+                float p2 = dot(p,p);
+                orbitTrap = min(orbitTrap, abs(vec4(p.xyz,p2)));
+                if (p2 > bailout) break;
+        }
+        float r = length(p);
+        return  0.2 * r * log(r) / length(dp);
+}
+
+float mandelboxSDF(vec3 pos) {
+  float SCALE = 2.8;
+  float MR2 = 0.2;
+
+  vec4 scalevec = vec4(SCALE, SCALE, SCALE, abs(SCALE)) / MR2;
+  float C1 = abs(SCALE-1.0), C2 = pow(abs(SCALE), float(1-fractalIterations));
+
+  // distance estimate
+  vec4 p = vec4(pos.xyz, 1.0), p0 = vec4(pos.xyz, 1.0);
+
+  for (int i=0; i<fractalIterations / 2; i++) {
+    p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
+    float r2 = dot(p.xyz, p.xyz);  // dp3
+        orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
+    p.xyzw *= clamp(max(MR2/r2, MR2), 0.0, 1.0);
+    p.xyzw = p*scalevec + p0;
+  }
+  return ((length(p.xyz) - C1) / p.w) - C2;
 }
 
 PrimitiveDist map(vec3 p) {
@@ -226,7 +261,7 @@ void main() {
     vec3 newEye = camEye;
     //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-    newEye = vec3(sin(iTime) * abs(5 - iTime / 5), 0, cos(iTime) * abs(5 - iTime / 5));
+    //newEye = vec3(sin(iTime) * abs(10 - iTime / 5), 0, cos(iTime) * abs(10 - iTime / 5));
 
 
     // Look vector (always looking at origin)
@@ -248,14 +283,14 @@ void main() {
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
-    /*
+
     rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = normalize(rayDirection);
 
     newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-*/
+
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
     if (rayMarchResult.primitive != NO_INTERSECT) {
