@@ -1,10 +1,13 @@
 #version 400
 #define USE_LOWPOWER_MODE 0
 #define USE_FREEVIEW      1
+#define USE_LIGHTING      2
 
-#define MANDELBULB        3
-#define MANDELBOX         4
-#define NO_INTERSECT      5
+#define MANDELBULB        50
+#define MANDELBOX         51
+#define NO_INTERSECT      52
+
+#define PI 3.141592
 
 // inputs and outputs
 in vec2 fragUV;
@@ -12,37 +15,26 @@ layout(location = 0) out vec4 color;
 
 
 // constants
-const float eps             = 0.001;
+const float rayMarchEps     = 0.001;
+const float normalEps       = 0.001;
+const vec2 e                = vec2(normalEps, 0.0); // For swizzling
 const float orbitTrapRadius = 1e4;
 
+const float minDist = 0.f;
+const float maxDist = 50.f;
 
+//float power = 8;
+//int fractalIterations = 30;
+//int colorIterations = fractalIterations;
+//vec3 baseColor = vec3(1.f, 1.f, 1.f);
+//float orbitMix = 1.f;
 
-
-int raymarchSteps = 256;
-float minDist = 0.f;
-float maxDist = 50.f;
-float eps = 0.001;
-
-float power = 8;
-int fractalIterations = 30;
-int colorIterations = fractalIterations;
+//vec4 xColor = vec4(0.2f, 0.2f, 0.2f, 0.0f);
+//vec4 yColor = vec4(0.f, 1.f, 0.f, 1.f);
+//vec4 zColor = vec4(0.3f, 0.9f, 0.f, 1.f);
+//vec4 originColor = vec4(0.f, 0.1f, 0.6f, 1.f);
 
 vec4 orbitTrap = vec4(orbitTrapRadius);
-vec3 baseColor = vec3(1.f, 1.f, 1.f);
-float orbitMix = 1.f;
-
-vec4 xColor = vec4(0.2f, 0.2f, 0.2f, 0.0f);
-vec4 yColor = vec4(0.f, 1.f, 0.f, 1.f);
-vec4 zColor = vec4(0.3f, 0.9f, 0.f, 1.f);
-vec4 originColor = vec4(0.f, 0.1f, 0.6f, 1.f);
-
-
-
-
-
-#define DIRECTION 0
-#define POINT     1
-
 
 // movement, resolution, and time uniforms
 uniform float iTime;
@@ -63,6 +55,7 @@ uniform float kr; // TODO
 
 
 // coloring values
+uniform vec3 ambientColor;
 uniform vec3 fractalBaseColor; /* [0, 1]^3 */
 uniform vec4 xTrapColor;       /* [0, 1]^4 */
 uniform vec4 yTrapColor;       /* [0, 1]^4 */
@@ -70,14 +63,12 @@ uniform vec4 originTrapColor;  /* [0, 1]^4 */
 
 uniform float orbitMix; /* [0, 1] */
 uniform float stepMix;  /* [0, 1] */
+uniform int   useLighting; /* {0, 1} */
 
 // fractal values
 uniform float power;           /* [1, 28] */
 uniform int raymarchSteps;     /* [500, 1229] */
 uniform int fractaliterations; /* [1, 40] */
-
-
-
 
 
 //struct Light {
@@ -167,23 +158,16 @@ float DE(vec3 p) {
 }
 
 PrimitiveDist map(vec3 p) {
-    //p = (rotX((mousePos.y / iResolution.y) * 2 * 3.141592) * rotY(-(mousePos.x / iResolution.x) * 2 * 3.141592) * vec4(p, 1.0)).xyz;
-    if (lowpowerMode == 0) {
+    if (lowpowerMode == USE_LOWPOWER_MODE) {
         p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
         p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
     }
 
     float mandelbulb = DE(p);
-
     return PrimitiveDist(mandelbulb, MANDELBULB);
-//    if (plane < sphere) return PrimitiveDist(plane, PLANE);
-//    else return PrimitiveDist(sphere, SPHERE);
-    //return PrimitiveDist(sdFloor(p), PLANE);
 }
 
-// TODO [Task 4] Calculate surface normals
-const float epsilon = 0.001;
-vec2 e = vec2(epsilon, 0.0); // For swizzling
+
 vec3 calcNormal(vec3 p) {
     vec3 res = vec3(0.f);
     res.x = map(p + e.xyy).dist - map(p - e.xyy).dist;
@@ -202,7 +186,6 @@ float shadow(vec3 ro, vec3 rd, float k) {
     for(int i = 0; i < 30; i++) {
         if(marchDist > boundingVolume) continue;
         float h = map(ro + rd * marchDist).dist;
-        // TODO [Task 7] Modify the loop to implement soft shadows
         if (h < threshold) {
             return darkness;
         }
@@ -214,22 +197,16 @@ float shadow(vec3 ro, vec3 rd, float k) {
 
 
 PrimitiveDist raymarch(vec3 ro, vec3 rd) {
-
-    // TODO [Task 2] Implement ray marching algorithm
-    // Fill in parameters
     float marchDist = 0.001;
     float boundingDist = 20.0;
-    float eps = 0.001;
 
     PrimitiveDist res;
 
     vec3 p = ro + rd * marchDist;
-
-    // Fill in the iteration count
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < raymarchSteps; i++) {
         numSteps += 1;
         res = map(ro + rd * marchDist);
-        if (res.dist < eps) {
+        if (res.dist < rayMarchEps) {
             res.dist = marchDist;
             break;
         }
@@ -248,81 +225,40 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
 
-    //vec3 col = vec3(0);
-
-    vec3 r = vec3(1, 0, 0);
-    vec3 g = vec3(0, 1, 0);
-    vec3 b = vec3(0, 0, 1);
-
-    // Col is the final color of the current pixel.
     vec3 col = calcOrbitTrapColor();
 
-    float sum = dot(pos, pos);
-    //vec3 col = vec3(0);
-    //vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
-    //col = clamp(col, 0, 0.7);
-    // Light vector
-    vec3 lig = normalize(vec3(0,0,0.5) - pos);
+    if (useLighting == USE_LIGHTING) {
+        vec3 lig = normalize(vec3(0,0,0.5) - pos);
 
-    // Normal vector
-    vec3 nor = calcNormal(pos);
+        // Normal vector
+        vec3 nor = calcNormal(pos);
 
-    // Ambient
-    float ambient = 0.1;
-    // Diffuse
-    float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
-    // Specular
-    float shineness = 32.0;
-    float specular = pow(clamp(dot(pos - camEye, reflect(lig, nor)), 0.0, 1.0), 32.0);
-    //specular = 0.f;
+        float ambient = 0.1;
+        float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
+        float shineness = 32.0;
+        float specular = pow(clamp(dot(pos - camEye, reflect(lig, nor)), 0.0, 1.0), 32.0);
+        specular = 0.f;
 
-    float darkness = shadow(pos, lig, 18.0);
-    darkness = 1.f;
-    // Applying the phong lighting model to the pixel.
-    col = vec3(ambient) * vec3(1, 0, 0) + vec3((diffuse + specular) * darkness) * col;
-    //col += vec3((ambient + diffuse + specular) * darkness);
+        float darkness = shadow(pos, lig, 18.0);
+        darkness = 1.f;
+        // Applying the phong lighting model to the pixel.
+        col = (ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col;
 
-    // TODO [Task 5] Assign different intersected objects with different materials
-    // Make things pretty!
-    //vec3 material = vec3(0.0);
-
-    /*if (which == PLANE) {
-        material = texCube(iChannel0, pos, nor);
-    } else if (which == SPHERE) {
-        material = texCube(iChannel1, pos, nor);
-    } else {
-        material = vec3(0.5);
-    }*/
-
-    // Blend the material color with the original color.
-    //col = mix(col, material, 0.4);
-
+    }
     return clamp(col, 0, 1);
 }
 
-mat2 rotate2d(float theta) {
-  float s = sin(theta), c = cos(theta);
-  return mat2(c, -s, s, c);
-}
-
 void main() {
-    //vec3 rayOrigin = vec3(inverse(viewMat) * vec4(0.f, 0.f, 0.f, 1));
-    float focalLength = 2.f;
-
-    // The target we are looking at
-    vec3 target = vec3(0.0);
-
-    const float pi = 3.141592;
+    const float focalLength = 2.f;
     vec3 newEye = camEye;
 
-    //newEye.yz = newEye.yz * camEye.z * rotate2d(mix(0, pi / 2, mousePos.y / iResolution.y));
-    //newEye.xz = newEye.xz * rotate2d(mix(-pi, pi, mousePos.x / iResolution.x)) +  vec2(target.x, target.z);
-
-    // Look vector
-    vec3 look = normalize(newEye - target);
+    // Look vector (always looking at origin)
+    vec3 look = normalize(newEye);
 
     // Up vector
     vec3 up = vec3(0, 1, 0);
+
+    // compute cam params and ray for current fragment
     vec3 cameraForward = -look;
     vec3 cameraRight = normalize(cross(cameraForward, up));
     vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
@@ -337,13 +273,10 @@ void main() {
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
     rayDirection = normalize(rayDirection);
 
-
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
-    //vec3 col = vec3(1.2) - vec3(float(numSteps) / 1000);
-    vec3 col = vec3(0);
     if (rayMarchResult.primitive != NO_INTERSECT) {
-      col = render(newEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive);
+      color = vec4(render(newEye, rayDirection, rayMarchResult.dist, rayMarchResult.primitive), 1);
+    } else {
+      color = mix(vec4(0.f), vec4(1.f), numSteps / 90);
     }
-
-    color = vec4(col, 1.0);
 }
