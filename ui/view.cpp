@@ -12,8 +12,7 @@
 extern const bool lowpowerMode;
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
-    m_time(), m_timer(), m_captureMouse(true), m_isDragging(false),
-    m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
+    m_time(), m_timer(), m_captureMouse(true)
 {
     m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -5.f)));
     //m_camera = std::unique_ptr<OrbitingCamera>(new OrbitingCamera());
@@ -84,6 +83,67 @@ void View::initializeGL() {
     m_quad->buildVAO();
 }
 
+void View::moveLightingUniforms() {
+    GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
+    glUniform1f(kaUniformLoc, 0.1f);
+
+    GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
+    glUniform1f(kdUniformLoc, 1.f);
+
+    GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
+    glUniform1f(ksUniformLoc, 1.f);
+
+    GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
+    glUniform1f(krUniformLoc, 1.f);
+
+    GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
+    glUniform1i(useLightingUniformLoc, 2);
+}
+
+void View::moveColoringUniforms() {
+    GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
+    glUniform3f(ambientColorUniformLoc, 0.3f, 0.9f, 0.5f);
+
+    GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
+    glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);
+
+    GLint xTrapColorUniformLoc = glGetUniformLocation(m_program, "xTrapColor");
+    glUniform4f(xTrapColorUniformLoc, 0.2f, 0.2f, 0.2f, 0.0f);
+
+    GLint yTrapColorUniformLoc = glGetUniformLocation(m_program, "yTrapColor");
+    glUniform4f(yTrapColorUniformLoc, 0.f, 1.f, 0.f, 1.f);
+
+    GLint zTrapColorUniformLoc = glGetUniformLocation(m_program, "zTrapColor");
+    glUniform4f(zTrapColorUniformLoc, 0.3f, 0.9f, 0.f, 1.f);
+
+    GLint originTrapColorUniformLoc = glGetUniformLocation(m_program, "originTrapColor");
+    glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 1.f);
+
+    GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
+    glUniform1f(orbitMixUniformLoc, 1.f);
+
+    GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
+    glUniform1f(stepMixUniformLoc, 1.f);
+}
+
+void View::moveFractalUniforms() {
+    GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
+    glUniform1f(powerUniformLoc, 8.f);
+
+    GLint raymarchStepsUniformLoc = glGetUniformLocation(m_program, "raymarchSteps");
+    glUniform1i(raymarchStepsUniformLoc, 1000);
+
+    GLint fractalIterationsUniformLoc = glGetUniformLocation(m_program, "fractalIterations");
+    glUniform1i(fractalIterationsUniformLoc, 30);
+
+    GLint stepFactorUniformLoc = glGetUniformLocation(m_program, "stepFactor");
+    glUniform1f(stepFactorUniformLoc, 0.3f);
+
+    GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
+    glUniform1f(bailoutUniformLoc, 4.f);
+}
+
+
 void View::paintGL() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -93,20 +153,15 @@ void View::paintGL() {
     GLint m_viewport[4];
     glGetIntegerv(GL_VIEWPORT, m_viewport);
 
-    // assert(m_viewport[2] == width() && m_viewport[3] == height());
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
-    //GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
-    //glUniform1f(timeUniformLoc, 0.f);
-
-
-    //GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
-    //glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    // TODO: do we really need to change these all of the time?
+    GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
+    glUniform1f(timeUniformLoc, m_accTime);
 
     GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
     const glm::vec3 eye = m_camera->getEye();
     glUniform3f(camEyeUniformLoc, eye.x, eye.y, eye.z);
-    //glUniform3f(camEyeUniformLoc, 0, 0, 0);
 
     GLint mousePosUniformLoc = glGetUniformLocation(m_program, "mousePos");
     const glm::vec2 mousePos = m_mouse->getPos();
@@ -114,6 +169,12 @@ void View::paintGL() {
 
     GLint lowpowerModeUniformLoc = glGetUniformLocation(m_program, "lowerpowerMode");
     glUniform1i(lowpowerModeUniformLoc, lowpowerMode ? 1 : 0);
+
+    moveLightingUniforms();
+    moveColoringUniforms();
+    moveFractalUniforms();
+    GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
+    glUniform1i(freeViewUniformLoc, 1);
 
     m_quad->draw();
     glUseProgram(0);
@@ -124,15 +185,9 @@ void View::resizeGL(int w, int h) {
     w = static_cast<int>(w / ratio);
     h = static_cast<int>(h / ratio);
     glViewport(0, 0, w, h);
-    //m_camera->setAspectRatio();
 }
 
 void View::mousePressEvent(QMouseEvent *event) {
-    /*if (event->button() == Qt::RightButton) {
-        m_camera->mouseDown(event->x(), event->y());
-        m_isDragging = true;
-        update();
-    }*/
 }
 
 void View::mouseMoveEvent(QMouseEvent *event) {
@@ -144,32 +199,22 @@ void View::mouseMoveEvent(QMouseEvent *event) {
     // deltaY are not zero before recentering the mouse, otherwise there will
     // be an infinite loop of mouse move events.
     if(m_captureMouse && !lowpowerMode) {
-//        int deltaX = event->x() - width() / 2;
-//        int deltaY = event->y() - height() / 2;
-//        if (!deltaX && !deltaY) return;
-//        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-//        m_mouse->translate(deltaX , deltaY);
-//        update();
-    }
-
-    /*if (m_isDragging) {
-        m_camera->mouseDragged(event->x(), event->y());
+        int deltaX = event->x() - width() / 2;
+        int deltaY = event->y() - height() / 2;
+        if (!deltaX && !deltaY) return;
+        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
+        m_mouse->translate(deltaX , deltaY);
         update();
-    }*/
+    }
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event) {
-    /*if (m_isDragging && event->button() == Qt::RightButton) {
-            m_camera->mouseUp(event->x(), event->y());
-            m_isDragging = false;
-            update();
-    }*/
 }
 
 
 void View::wheelEvent(QWheelEvent *event) {
     if(!lowpowerMode) {
-        m_camera->mouseScrolled(event->delta());
+        m_camera->mouseScrolled(event->delta() * 0.3f);
         update();
     }
 }
@@ -185,9 +230,6 @@ void View::keyReleaseEvent(QKeyEvent *event) {
 void View::tick() {
     // Get the number of seconds since the last tick (variable update rate)
     float seconds = m_time.restart() * 0.001f;
-
-    // TODO: Implement the demo update here
-
-    // Flag this view for repainting (Qt will call paintGL() soon after)
+    m_accTime += seconds;
     update();
 }
