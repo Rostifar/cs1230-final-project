@@ -32,18 +32,6 @@ const float maxDist = 50.f;
 // global variables
 int numSteps = 0;
 
-
-//float power = 8;
-//int fractalIterations = 30;
-//int colorIterations = fractalIterations;
-//vec3 baseColor = vec3(1.f, 1.f, 1.f);
-//float orbitMix = 1.f;
-
-//vec4 xColor = vec4(0.2f, 0.2f, 0.2f, 0.0f);
-//vec4 yColor = vec4(0.f, 1.f, 0.f, 1.f);
-//vec4 zColor = vec4(0.3f, 0.9f, 0.f, 1.f);
-//vec4 originColor = vec4(0.f, 0.1f, 0.6f, 1.f);
-
 vec4 orbitTrap = vec4(orbitTrapRadius);
 
 // movement, resolution, and time uniforms
