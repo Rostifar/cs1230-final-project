@@ -4,6 +4,26 @@ in vec2 fragUV;
 layout(location = 0) out vec4 color;
 
 
+int raymarchSteps = 256;
+float minDist = 0.f;
+float maxDist = 50.f;
+float eps = 0.001;
+
+float power = 8;
+int fractalIterations = 30;
+int colorIterations = fractalIterations;
+
+vec4 orbitTrap = vec4(1e4);
+vec3 baseColor = vec3(1.f, 1.f, 1.f);
+float orbitMix = 1.f;
+
+vec4 xColor = vec4(0.2f, 0.2f, 0.2f, 0.0f);
+vec4 yColor = vec4(0.f, 1.f, 0.f, 1.f);
+vec4 zColor = vec4(0.3f, 0.9f, 0.f, 1.f);
+vec4 originColor = vec4(0.f, 0.1f, 0.6f, 1.f);
+
+
+
 #define DIRECTION 0
 #define POINT     1
 
@@ -74,15 +94,23 @@ float sdFloor(vec3 p) {
     return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
+vec3 calcOrbitTrapColor() {
+        orbitTrap.w = sqrt(orbitTrap.w);
+        vec3 orbitColor = xColor.xyz * xColor.w * orbitTrap.x +
+                          yColor.xyz * yColor.w * orbitTrap.y +
+                          zColor.xyz * zColor.w * orbitTrap.z +
+                          originColor.xyz * originColor.w * orbitTrap.w;
+        return mix(baseColor, 3 * orbitColor,  orbitMix);
+}
+
 float DE(vec3 p) {
     vec3 z = p;
     float dr = 1.0;
     float r = 0.0;
-    float Bailout = 2.0;
+    float Bailout = 4.0;
     int Iterations = 30;
-    float Power = 8;
-    float b = 10000.f;
-    for (int i = 0; i < Iterations ; i++) {
+    float Power = 10;
+    for (int i = 0; i < fractalIterations ; i++) {
             r = length(z);
             if (r>Bailout) break;
 
@@ -99,10 +127,9 @@ float DE(vec3 p) {
             // convert back to cartesian coordinates
             z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
             z+=p;
-            b = min(b, length(z));
-            //orbit = min(orbit, abs(vec4(z, dot(z, z))));
+            orbitTrap = min(orbitTrap, abs(vec4(z.x,z.y,z.z,r*r)));
     }
-    return 0.5*log(r)*r/dr;
+    return 0.2*log(r)*r/dr;
 }
 
 PrimitiveDist map(vec3 p) {
@@ -130,6 +157,7 @@ vec3 calcNormal(vec3 p) {
     res.z = map(p + e.yyx).dist - map(p - e.yyx).dist;
     return normalize(res);
 }
+
 
 float shadow(vec3 ro, vec3 rd, float k) {
     float marchDist = 0.001;
@@ -165,20 +193,18 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
     // Fill in the iteration count
     for (int i = 0; i < 1000; i++) {
-       numSteps += 1;
-       res = map(p);
-
-       if (res.dist < eps) {
-           res.dist = marchDist;
-           break;
-       }
-       p += res.dist * rd * 0.5;
-       if (marchDist > boundingDist) {
-           res.dist = -1.f;
-           res.primitive = NO_INTERSECT;
-           break;
-       }
-       marchDist += res.dist * 0.5;
+        numSteps += 1;
+        res = map(ro + rd * marchDist);
+        if (res.dist < eps) {
+            res.dist = marchDist;
+            break;
+        }
+        if (marchDist > boundingDist) {
+            res.dist = marchDist;
+            res.primitive = NO_INTERSECT;
+            break;
+        }
+        marchDist += res.dist * 0.2;
     }
     return res;
 }
@@ -195,31 +221,31 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 b = vec3(0, 0, 1);
 
     // Col is the final color of the current pixel.
-    vec3 col = vec3(1 - numSteps / 1000);
+    vec3 col = calcOrbitTrapColor();
 
     float sum = dot(pos, pos);
     //vec3 col = vec3(0);
     //vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
     //col = clamp(col, 0, 0.7);
     // Light vector
-    vec3 lig = normalize(vec3(10.0,0.6,0.5) - pos);
+    vec3 lig = normalize(vec3(1.0,0.6,0.5) - pos);
 
     // Normal vector
     vec3 nor = calcNormal(pos);
 
     // Ambient
-    float ambient = 0.2;
+    float ambient = 0.1;
     // Diffuse
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
     float shineness = 32.0;
-    float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 8.0);
+    float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 32.0);
     //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);
-    //darkness = 1.f;
+    darkness = 1.f;
     // Applying the phong lighting model to the pixel.
-    col *= ((ambient + diffuse + specular) * darkness);
+    col = vec3(ambient) * vec3(1, 0, 0) + vec3((diffuse + specular) * darkness) * col;
     //col += vec3((ambient + diffuse + specular) * darkness);
 
     // TODO [Task 5] Assign different intersected objects with different materials
@@ -237,7 +263,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     // Blend the material color with the original color.
     //col = mix(col, material, 0.4);
 
-    return col;
+    return clamp(col, 0, 1);
 }
 
 mat2 rotate2d(float theta) {
