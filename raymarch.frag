@@ -107,14 +107,14 @@ vec3 calcOrbitTrapColor() {
                       yTrapColor.xyz * yTrapColor.w * orbitTrap.y +
                       zTrapColor.xyz * zTrapColor.w * orbitTrap.z +
                       originTrapColor.xyz * originTrapColor.w * orbitTrap.w;
-    return mix(fractalBaseColor, 1 * orbitColor,  orbitMix);
+    return clamp(mix(fractalBaseColor, 3 * orbitColor,  orbitMix), 0, 1);
 }
 
 float DE(vec3 p) {
     vec3 z   = p;
     float dr = 1.0;
     float r  = 0.0;
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < fractalIterations; i++) {
             r = length(z);
             if (r > 4) break;
 
@@ -176,7 +176,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
     PrimitiveDist res;
     vec3 p = ro + rd * marchDist;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < raymarchSteps; i++) {
         numSteps += 1;
         res = map(ro + rd * marchDist);
         if (res.dist < rayMarchEps) {
@@ -197,9 +197,10 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
     vec3 col = calcOrbitTrapColor();
+    //vec3 col = vec3(cos(iTime), 0, sin(iTime));
 
     if (useLighting == USE_LIGHTING) {
-        vec3 lig = normalize(vec3(5.0, 5.0, 5.0));
+        vec3 lig = normalize(vec3(5.0, 5.0, 5.0) - pos);
         vec3 nor = calcNormal(pos);
 
         float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
@@ -215,8 +216,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
 }
 
 vec4 renderBackground() {
-    //return mix(vec4(0.f), vec4(1.f), numSteps / 1000);
-    return vec4(0, 0, 0, 1.f);
+    return mix(vec4(0.f), vec4(0.2f), max(1 - numSteps / 300, 0));
 }
 
 void main() {
@@ -226,6 +226,8 @@ void main() {
     vec3 newEye = camEye;
     //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
+    newEye = vec3(sin(iTime) * abs(5 - iTime / 5), 0, cos(iTime) * abs(5 - iTime / 5));
+
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);
@@ -246,13 +248,14 @@ void main() {
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
+    /*
     rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = normalize(rayDirection);
 
     newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-
+*/
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
     if (rayMarchResult.primitive != NO_INTERSECT) {
