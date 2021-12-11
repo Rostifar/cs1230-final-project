@@ -119,7 +119,7 @@ vec3 calcOrbitTrapColor() {
                       yTrapColor.xyz * yTrapColor.w * orbitTrap.y +
                       zTrapColor.xyz * zTrapColor.w * orbitTrap.z +
                       originTrapColor.xyz * originTrapColor.w * orbitTrap.w;
-    return mix(fractalBaseColor, 3 * orbitColor,  orbitMix);
+    return mix(fractalBaseColor, 1 * orbitColor,  orbitMix);
 }
 
 float DE(vec3 p) {
@@ -133,12 +133,12 @@ float DE(vec3 p) {
             // convert to polar coordinates
             float theta = acos(z.z/r);
             float phi = atan(z.y,z.x);
-            dr =  pow(r, power - 1.0) * 8 * dr + 1.0f;
+            dr =  pow(r, power - 1.0) * power * dr + 1.0f;
 
             // scale and rotate the point
-            float zr = pow(r, 8);
-            theta = theta * 8;
-            phi = phi * 8;
+            float zr = pow(r, power);
+            theta = theta * power;
+            phi = phi * power;
 
             // convert back to cartesian coordinates
             z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
@@ -150,8 +150,7 @@ float DE(vec3 p) {
 
 PrimitiveDist map(vec3 p) {
     if (lowpowerMode == USE_LOWPOWER_MODE) {
-        p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
-        p = (rotY(-(0.5 * mousePos.x / iResolution.x)) * vec4(p, 1.0)).xyz;
+
     }
 
     float mandelbulb = DE(p);
@@ -213,10 +212,10 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
-    vec3 col = calcOrbitTrapColor();
+    vec3 col = vec3(1, 1, 1);
 
     if (useLighting == USE_LIGHTING) {
-        vec3 lig = normalize(vec3(0.0, 0.0, 0.0) - pos);
+        vec3 lig = normalize(vec3(5.0, 5.0, 5.0));
         vec3 nor = calcNormal(pos);
 
         float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
@@ -225,7 +224,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
         //specular = 0.f;
 
         float darkness = shadow(pos, lig, 18.0);
-        darkness = 1.f;
+        //darkness = 1.f;
         col = (ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col;
     }
     return clamp(col, 0, 1);
@@ -239,6 +238,9 @@ vec4 renderBackground() {
 void main() {
     const float focalLength = 2.f;
     vec3 newEye = camEye;
+
+    newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
+    newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);

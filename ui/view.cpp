@@ -102,22 +102,22 @@ void View::moveLightingUniforms() {
 
 void View::moveColoringUniforms() {
     GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
-    glUniform3f(ambientColorUniformLoc, 0.3f, 0.9f, 0.5f);
+    glUniform3f(ambientColorUniformLoc, 1.f, 1.f, 1.f);
 
     GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
-    glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);
+    glUniform3f(fractalBaseColorUniformLoc, 0.f, 0.f, 0.f);
 
     GLint xTrapColorUniformLoc = glGetUniformLocation(m_program, "xTrapColor");
-    glUniform4f(xTrapColorUniformLoc, 0.2f, 0.2f, 0.2f, 0.0f);
+    glUniform4f(xTrapColorUniformLoc, 1.f, 1.f, 1.f, 1.f);
 
     GLint yTrapColorUniformLoc = glGetUniformLocation(m_program, "yTrapColor");
-    glUniform4f(yTrapColorUniformLoc, 0.f, 1.f, 0.f, 1.f);
+    glUniform4f(yTrapColorUniformLoc, 0.f, 0.f, 0.f, 0.f);
 
     GLint zTrapColorUniformLoc = glGetUniformLocation(m_program, "zTrapColor");
-    glUniform4f(zTrapColorUniformLoc, 0.3f, 0.9f, 0.f, 1.f);
+    glUniform4f(zTrapColorUniformLoc, 0.3f, 0.9f, 0.f, 0.f);
 
     GLint originTrapColorUniformLoc = glGetUniformLocation(m_program, "originTrapColor");
-    glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 1.f);
+    glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 0.f);
 
     GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
     glUniform1f(orbitMixUniformLoc, 1.f);
