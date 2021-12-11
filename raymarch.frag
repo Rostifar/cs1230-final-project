@@ -149,12 +149,6 @@ float DE(vec3 p) {
 }
 
 PrimitiveDist map(vec3 p) {
-    if (lowpowerMode == USE_LOWPOWER_MODE) {
-        //p = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(p, 1.0)).xyz;
-        //p = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(p, 1.0)).xyz;
-
-    }
-
     float mandelbulb = DE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
 }
@@ -267,6 +261,7 @@ void main() {
     rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
     rayDirection = normalize(rayDirection);
+
     newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
 
