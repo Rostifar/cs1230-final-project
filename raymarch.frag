@@ -1,7 +1,21 @@
 #version 400
+#define USE_LOWPOWER_MODE 0
+#define USE_FREEVIEW      1
 
+#define MANDELBULB        3
+#define MANDELBOX         4
+#define NO_INTERSECT      5
+
+// inputs and outputs
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
+
+
+// constants
+const float eps             = 0.001;
+const float orbitTrapRadius = 1e4;
+
+
 
 
 int raymarchSteps = 256;
@@ -13,7 +27,7 @@ float power = 8;
 int fractalIterations = 30;
 int colorIterations = fractalIterations;
 
-vec4 orbitTrap = vec4(1e4);
+vec4 orbitTrap = vec4(orbitTrapRadius);
 vec3 baseColor = vec3(1.f, 1.f, 1.f);
 float orbitMix = 1.f;
 
@@ -24,33 +38,56 @@ vec4 originColor = vec4(0.f, 0.1f, 0.6f, 1.f);
 
 
 
+
+
 #define DIRECTION 0
 #define POINT     1
 
 
-float ka;
-float kd;
-float ks;
-
-
-bool useCamera = false;
-
-
-struct Light {
-    vec3 position;
-    vec3 intensity;
-    int type;
-};
-
-
+// movement, resolution, and time uniforms
+uniform float iTime;
 uniform vec2 iResolution;
 uniform vec3 camEye;
 uniform vec2 mousePos;
 
+// mode uniforms
 uniform int lowpowerMode;
+uniform int useFreeView;
 
-//uniform vec3 camUp;
-//uniform float focalLen;
+
+// lighting values
+uniform float ka;
+uniform float ks;
+uniform float kd;
+uniform float kr; // TODO
+
+
+// coloring values
+uniform vec3 fractalBaseColor; /* [0, 1]^3 */
+uniform vec4 xTrapColor;       /* [0, 1]^4 */
+uniform vec4 yTrapColor;       /* [0, 1]^4 */
+uniform vec4 originTrapColor;  /* [0, 1]^4 */
+
+uniform float orbitMix; /* [0, 1] */
+uniform float stepMix;  /* [0, 1] */
+
+// fractal values
+uniform float power;           /* [1, 28] */
+uniform int raymarchSteps;     /* [500, 1229] */
+uniform int fractaliterations; /* [1, 40] */
+
+
+
+
+
+//struct Light {
+//    vec3 position;
+//    vec3 intensity;
+//    int type;
+//};
+
+
+// <-------
 
 mat4 rotY(float ang) {
     float x = cos(ang);
@@ -72,13 +109,10 @@ mat4 rotX(float ang) {
                 0, 0,  0, 1);
 }
 
+// ------->
+
 int numSteps = 0;
 
-#define SPHERE 0
-#define PLANE 1
-#define MANDELBULB 3
-#define NO_INTERSECT 2
-#define DISPLACEMENT_FACTOR 0.1
 
 // Data structure for raymarching results
 struct PrimitiveDist {
@@ -184,7 +218,7 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
     // TODO [Task 2] Implement ray marching algorithm
     // Fill in parameters
     float marchDist = 0.001;
-    float boundingDist = 50.0;
+    float boundingDist = 20.0;
     float eps = 0.001;
 
     PrimitiveDist res;
@@ -228,7 +262,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     //vec3 col = r * pow(pos.x, 2) / sum + g * pow(pos.y, 2) / sum + b * pow(pos.z, 2) / sum;
     //col = clamp(col, 0, 0.7);
     // Light vector
-    vec3 lig = normalize(vec3(1.0,0.6,0.5) - pos);
+    vec3 lig = normalize(vec3(0,0,0.5) - pos);
 
     // Normal vector
     vec3 nor = calcNormal(pos);
@@ -239,7 +273,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     float diffuse = clamp(dot(nor, lig), 0.0, 1.0);
     // Specular
     float shineness = 32.0;
-    float specular = pow(clamp(dot(-rd, reflect(lig, nor)), 0.0, 1.0), 32.0);
+    float specular = pow(clamp(dot(pos - camEye, reflect(lig, nor)), 0.0, 1.0), 32.0);
     //specular = 0.f;
 
     float darkness = shadow(pos, lig, 18.0);

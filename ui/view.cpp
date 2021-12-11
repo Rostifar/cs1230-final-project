@@ -12,8 +12,7 @@
 extern const bool lowpowerMode;
 
 View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
-    m_time(), m_timer(), m_captureMouse(true), m_isDragging(false),
-    m_oldPosX(0), m_oldPosY(0), m_oldPosZ(0), m_oldRotU(0), m_oldRotV(0), m_oldRotN(0)
+    m_time(), m_timer(), m_captureMouse(true)
 {
     m_camera = std::unique_ptr<SimpleCamera>(new SimpleCamera(glm::vec3(0.f, 0.f, -5.f)));
     //m_camera = std::unique_ptr<OrbitingCamera>(new OrbitingCamera());
@@ -84,6 +83,18 @@ void View::initializeGL() {
     m_quad->buildVAO();
 }
 
+void View::moveLightingUniforms() {
+    GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
+    glUniform1f(kaUniformLoc, 1.f);
+
+    GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
+    glUniform1f(kdUniformLoc, 1.f);
+
+    GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
+    glUniform1f(ksUniformLoc, 1.f);
+}
+
+
 void View::paintGL() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -93,20 +104,14 @@ void View::paintGL() {
     GLint m_viewport[4];
     glGetIntegerv(GL_VIEWPORT, m_viewport);
 
-    // assert(m_viewport[2] == width() && m_viewport[3] == height());
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
-    //GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
-    //glUniform1f(timeUniformLoc, 0.f);
-
-
-    //GLint viewMatUniformLoc = glGetUniformLocation(m_program, "viewMat");
-    //glUniformMatrix4fv(viewMatUniformLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
+    glUniform1f(timeUniformLoc, m_accTime);
 
     GLint camEyeUniformLoc = glGetUniformLocation(m_program, "camEye");
     const glm::vec3 eye = m_camera->getEye();
     glUniform3f(camEyeUniformLoc, eye.x, eye.y, eye.z);
-    //glUniform3f(camEyeUniformLoc, 0, 0, 0);
 
     GLint mousePosUniformLoc = glGetUniformLocation(m_program, "mousePos");
     const glm::vec2 mousePos = m_mouse->getPos();
@@ -114,6 +119,13 @@ void View::paintGL() {
 
     GLint lowpowerModeUniformLoc = glGetUniformLocation(m_program, "lowerpowerMode");
     glUniform1i(lowpowerModeUniformLoc, lowpowerMode ? 1 : 0);
+
+    moveLightingUniforms();
+
+    GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
+    glUniform1i(freeViewUniformLoc, 1);
+
+
 
     m_quad->draw();
     glUseProgram(0);
@@ -124,15 +136,9 @@ void View::resizeGL(int w, int h) {
     w = static_cast<int>(w / ratio);
     h = static_cast<int>(h / ratio);
     glViewport(0, 0, w, h);
-    //m_camera->setAspectRatio();
 }
 
 void View::mousePressEvent(QMouseEvent *event) {
-    /*if (event->button() == Qt::RightButton) {
-        m_camera->mouseDown(event->x(), event->y());
-        m_isDragging = true;
-        update();
-    }*/
 }
 
 void View::mouseMoveEvent(QMouseEvent *event) {
@@ -151,19 +157,9 @@ void View::mouseMoveEvent(QMouseEvent *event) {
         m_mouse->translate(deltaX , deltaY);
         update();
     }
-
-    /*if (m_isDragging) {
-        m_camera->mouseDragged(event->x(), event->y());
-        update();
-    }*/
 }
 
 void View::mouseReleaseEvent(QMouseEvent *event) {
-    /*if (m_isDragging && event->button() == Qt::RightButton) {
-            m_camera->mouseUp(event->x(), event->y());
-            m_isDragging = false;
-            update();
-    }*/
 }
 
 
@@ -185,9 +181,6 @@ void View::keyReleaseEvent(QKeyEvent *event) {
 void View::tick() {
     // Get the number of seconds since the last tick (variable update rate)
     float seconds = m_time.restart() * 0.001f;
-
-    // TODO: Implement the demo update here
-
-    // Flag this view for repainting (Qt will call paintGL() soon after)
+    m_accTime += seconds;
     update();
 }

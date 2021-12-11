@@ -19,30 +19,26 @@ public:
     ~View();
 
 private:
-    //std::unique_ptr<OrbitingCamera> m_camera;
+    // movement variables
     std::unique_ptr<SimpleCamera> m_camera;
     std::unique_ptr<Mouse> m_mouse;
-
-    int m_lastX;
-    int m_lastY;
-
     glm::vec4 m_cameraEye;
-    bool m_isDragging;
+    bool m_captureMouse;
 
+    // time variables
+    float m_accTime;
     QTime m_time;
     QTimer m_timer;
-    bool m_captureMouse;
+
+    // opengl variables
     GLuint m_program;
     std::unique_ptr<OpenGLShape> m_quad;
-
-
-
-    float m_oldPosX, m_oldPosY, m_oldPosZ;
-    float m_oldRotU, m_oldRotV, m_oldRotN;
 
     void initializeGL();
     void paintGL();
     void resizeGL(int w, int h);
+
+    void moveLightingUniforms();
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
