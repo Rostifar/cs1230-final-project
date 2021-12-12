@@ -29,6 +29,9 @@ const float orbitTrapRadius = 1e4;
 const float minDist = 0.f;
 const float maxDist = 50.f;
 
+const vec3 starLow = vec3(0.61, 0.69, 0.99);
+const vec3 starHigh = vec3(0.99, 0.80, 0.43);
+
 // global variables
 int numSteps = 0;
 
@@ -123,7 +126,7 @@ float mandelbulbDE(vec3 p) {
     float r  = 0.0;
     for (int i = 0; i < fractalIterations; i++) {
             r = length(z);
-            if (r > 4) break;
+            if (r > bailout) break;
 
             // convert to polar coordinates
             float theta = acos(z.z/r);
@@ -143,31 +146,30 @@ float mandelbulbDE(vec3 p) {
     return 0.2f * log(r) * r / dr;
 }
 
-float juliaDE(vec3 pos) {
-        vec4 q1 = vec4(pos, 0.0);
-        vec4 q2 = vec4(1.0, 0.0, 0.0, 0.0);
-        for (int i = 0; i < fractalIterations; i++) {
-            // quaternion multiplication
-            q2 = 2.f * vec4(q1.x * q2.x - dot(q1.yzw, q2.yzw), q1.x * q2.yzw + q2.x * q1.yzw + cross(q1.yzw, q2.yzw));
+float juliaQuaternionDE(vec3 pos) {
+    vec4 q1 = vec4(pos, 0.0);
+    vec4 q2 = vec4(1.0, 0.0, 0.0, 0.0);
+    for (int i = 0; i < fractalIterations; i++) {
+        // quaternion multiplication
+        q2 = 2.f * vec4(q1.x * q2.x - dot(q1.yzw, q2.yzw), q1.x * q2.yzw + q2.x * q1.yzw + cross(q1.yzw, q2.yzw));
 
-            // quaternion sqrt
-            q1 = vec4(q1.x * q1.x - dot(q1.yzw, q1.yzw), vec3(2.f * q1.x * q1.yzw)) + cos(iTime);
-            float pDelta = dot(q1, q1);
-            orbitTrap = min(orbitTrap, abs(vec4(q1.xyz, pDelta)));
-            if (pDelta > bailout) break;
-        }
-        float r = length(q1);
-        return  0.2 * r * log(r) / length(q2);
+        // quaternion sqrt
+        q1 = vec4(q1.x * q1.x - dot(q1.yzw, q1.yzw), vec3(2.f * q1.x * q1.yzw)) + cos(iTime);
+        float pDelta = dot(q1, q1);
+        orbitTrap = min(orbitTrap, abs(vec4(q1.xyz, pDelta)));
+        if (pDelta > bailout) break;
+    }
+    float r = length(q1);
+    return 0.2f * r * log(r) / length(q2);
 }
 
-float mandelboxSDF(vec3 pos) {
+/*float mandelboxDE(vec3 pos) {
   float SCALE = 2.8;
   float MR2 = 0.2;
 
-  vec4 scalevec = vec4(SCALE, SCALE, SCALE, abs(SCALE)) / MR2;
+  vec4 scalevec = vec4(2.4f, 2.4, SCALE, abs(SCALE)) / MR2;
   float C1 = abs(SCALE-1.0), C2 = pow(abs(SCALE), float(1-fractalIterations));
 
-  // distance estimate
   vec4 p = vec4(pos.xyz, 1.0), p0 = vec4(pos.xyz, 1.0);
 
   for (int i=0; i<fractalIterations / 2; i++) {
@@ -178,10 +180,10 @@ float mandelboxSDF(vec3 pos) {
     p.xyzw = p*scalevec + p0;
   }
   return ((length(p.xyz) - C1) / p.w) - C2;
-}
+}*/
 
 PrimitiveDist map(vec3 p) {
-    float mandelbulb = mandelbulbDE(p);
+    float mandelbulb = juliaQuaternionDE(p);
     return PrimitiveDist(mandelbulb, MANDELBULB);
 }
 
@@ -215,19 +217,18 @@ float shadow(vec3 ro, vec3 rd, float k) {
 
 float ambientOcclusion(vec3 p, vec3 n) {
     float aoEps = 0.001;
-    float aoStength = 10; // tunable
     float delta = 2.f * aoEps;
 
     float ao = 0;
     float denom = 0.5f;
 
     for (int i = 1; i < 6; i++) {
-        float fd = mandelbulbDE(p + n * delta * i);
+        float fd = juliaQuaternionDE(p + n * delta * i);
         ao += (delta * i - fd) / denom;
         denom *= 0.5;
         delta = delta * 2.0 - aoEps;
     }
-    ao *= aoStength;
+    ao *= aoStrength;
     return clamp(1 - ao, 0.0, 1.0);
 }
 
@@ -258,34 +259,42 @@ PrimitiveDist raymarch(vec3 ro, vec3 rd) {
 
 vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
-    //vec3 col = mix(calcOrbitTrapColor(), vec3(0), 1 - exp(-0.05 * numSteps / raymarchSteps));
     vec3 col = calcOrbitTrapColor();
-    //vec3 col = vec3(cos(iTime), 0, sin(iTime));
 
     if (useLighting == USE_LIGHTING) {
         vec3 lig1 = normalize(vec3(5.f, 5.f, 5.f) - pos);
-        //vec3 lig2 = normalize(vec3(-5.0, -5.0, -5.0) - pos);
+        vec3 lig2 = normalize(vec3(-5.0, -5.0, -5.0) - pos);
 
         vec3 nor = calcNormal(pos);
 
-        float diffuse = clamp(dot(nor, lig1), 0.0, 1.0) ;
+        float diffuse = clamp(dot(nor, lig1), 0.0, 1.0);
+        diffuse += clamp(dot(nor, lig2), 0.0, 1.0);
         float shineness = 32.0;
         float specular = pow(clamp(dot(-rd, reflect(lig1, nor)), 0.0, 1.0), shineness);
-        //specular += pow(clamp(dot(-rd, reflect(lig2, nor)), 0.0, 1.0), shineness);
+        specular += pow(clamp(dot(-rd, reflect(lig2, nor)), 0.0, 1.0), shineness);
 
         float darkness = shadow(pos, lig1, 18.0);
 
         float ao = ambientOcclusion(pos, nor);
-        ao = 1;
+        //ao = 1;
         //darkness = 1.f;
         col = ((ao * ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col);
     }
     return clamp(col, 0, 1);
 }
 
-vec4 renderBackground() {
-    return vec4(0, 0, 0, 1);
+// rand function; src: https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+float rand(float i){
+    return fract(sin(dot(vec2(i, i), vec2(32.9898,78.233))) * 43758.5453);
 }
+
+vec4 renderBackground() {
+    vec4 star = vec4(rand(fragUV.x * fragUV.y));
+    star *= pow(rand(fragUV.x * fragUV.y), 132.f);
+    star.xyz *= mix(starLow, starHigh, rand(fragUV.x + fragUV.y));
+    return star * cos(iTime * rand(fragUV.x / iResolution.x));
+}
+
 
 void main() {
     const float focalLength = 2.f;
@@ -295,7 +304,7 @@ void main() {
     //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
     //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
     //newEye = vec3(sin(iTime) * abs(10 - iTime / 5), 0, cos(iTime) * abs(10 - iTime / 5));
-    newEye =  vec3(sin(iTime) * 2, 0, cos(iTime) * 2);
+    //newEye =  vec3(sin(iTime) * 4, 0, cos(iTime) * 4);
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);
@@ -317,12 +326,12 @@ void main() {
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
 
-    //rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
-    //rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
-    //rayDirection = normalize(rayDirection);
+    rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
+    rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
+    rayDirection = normalize(rayDirection);
 
-    //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
-    //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
+    newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
+    newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
 
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
