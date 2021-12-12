@@ -97,12 +97,12 @@ void View::moveLightingUniforms() {
     glUniform1f(krUniformLoc, 1.f);
 
     GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
-    glUniform1i(useLightingUniformLoc, 1);
+    glUniform1i(useLightingUniformLoc, 2);
 }
 
 void View::moveColoringUniforms() {
     GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
-    glUniform3f(ambientColorUniformLoc, 0.3f, 0.9f, 0.5f);
+    glUniform3f(ambientColorUniformLoc, 1.f, 1.f, 1.f);
 
     GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
     glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);
@@ -120,7 +120,7 @@ void View::moveColoringUniforms() {
     glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 1.f);
 
     GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
-    glUniform1f(orbitMixUniformLoc, 1.f);
+    glUniform1f(orbitMixUniformLoc, 0.f);
 
     GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
     glUniform1f(stepMixUniformLoc, 1.f);
@@ -141,6 +141,9 @@ void View::moveFractalUniforms() {
 
     GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
     glUniform1f(bailoutUniformLoc, 4.f);
+
+    GLint ambientOcclusionUniformLoc = glGetUniformLocation(m_program, "aoStrength");
+    glUniform1f(ambientOcclusionUniformLoc, 1.f);
 }
 
 
