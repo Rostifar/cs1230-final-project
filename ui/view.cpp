@@ -1,6 +1,8 @@
 #include "view.h"
 
 #include "viewformat.h"
+#include "Settings.h"
+
 #include <QApplication>
 #include <QKeyEvent>
 #include <iostream>
@@ -85,16 +87,16 @@ void View::initializeGL() {
 
 void View::moveLightingUniforms() {
     GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
-    glUniform1f(kaUniformLoc, 0.1f);
+    glUniform1f(kaUniformLoc, settings.ka_value);
 
     GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
-    glUniform1f(kdUniformLoc, 1.f);
+    glUniform1f(kdUniformLoc, settings.kd_value);
 
     GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
-    glUniform1f(ksUniformLoc, 1.f);
+    glUniform1f(ksUniformLoc, settings.ks_value);
 
     GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
-    glUniform1f(krUniformLoc, 1.f);
+    glUniform1f(krUniformLoc, settings.kr_value);
 
     GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
     glUniform1i(useLightingUniformLoc, 2);

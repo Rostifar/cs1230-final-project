@@ -25,6 +25,9 @@ struct Settings {
     void loadSettingsOrDefaults();
 
     float ka_value;
+    float kd_value;
+    float ks_value;
+    float kr_value;
 };
 
 // The global Settings object, will be initialized by MainWindow

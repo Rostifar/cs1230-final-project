@@ -77,8 +77,116 @@
        <rect>
         <x>220</x>
         <y>40</y>
-        <width>113</width>
-        <height>23</height>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="kd_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>KD</string>
+      </property>
+     </widget>
+     <widget class="QSlider" name="kd_horizontalSlider">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>60</y>
+        <width>160</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="kd_lineEdit">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>60</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="kssssssss_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>KS</string>
+      </property>
+     </widget>
+     <widget class="QSlider" name="ks_horizontalSlider">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>80</y>
+        <width>160</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ks_lineEdit">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>80</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="kr_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>KR</string>
+      </property>
+     </widget>
+     <widget class="QSlider" name="kr_horizontalSlider">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>100</y>
+        <width>160</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="kr_lineEdit">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>100</y>
+        <width>41</width>
+        <height>16</height>
        </rect>
       </property>
      </widget>
