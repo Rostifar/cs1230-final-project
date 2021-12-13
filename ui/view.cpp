@@ -95,16 +95,10 @@ void View::moveLightingUniforms() {
     GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
     glUniform1f(ksUniformLoc, settings.ks_value);
 
-    GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
-    glUniform1f(krUniformLoc, settings.kr_value);
-
-    GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
-    glUniform1i(useLightingUniformLoc, 2);
-
     GLint useLight1UniformLoc = glGetUniformLocation(m_program, "useLight1");
-    glUniform1i(useLight1UniformLoc, 1);
+    glUniform1i(useLight1UniformLoc, settings.useLight1 ? 1 : 0);
     GLint useLight2UniformLoc = glGetUniformLocation(m_program, "useLight2");
-    glUniform1i(useLight2UniformLoc, 1);
+    glUniform1i(useLight2UniformLoc, settings.useLight2 ? 1 : 0);
 }
 
 void View::moveColoringUniforms() {
@@ -128,9 +122,6 @@ void View::moveColoringUniforms() {
 
     GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
     glUniform1f(orbitMixUniformLoc, settings.orbitMix);
-
-    GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
-    glUniform1f(stepMixUniformLoc, settings.stepMix);
 }
 
 void View::moveFractalUniforms() {
@@ -153,7 +144,7 @@ void View::moveFractalUniforms() {
     glUniform1f(ambientOcclusionUniformLoc, 1.f);
 
     GLint fractalTypeUniformLoc = glGetUniformLocation(m_program, "fractalType");
-    glUniform1i(fractalTypeUniformLoc, 52);
+    glUniform1i(fractalTypeUniformLoc, 53);
 }
 
 
@@ -187,7 +178,7 @@ void View::paintGL() {
     moveColoringUniforms();
     moveFractalUniforms();
     GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
-    glUniform1i(freeViewUniformLoc, 0);
+    glUniform1i(freeViewUniformLoc, 1);
 
     m_quad->draw();
     glUseProgram(0);
@@ -216,8 +207,8 @@ void View::mouseMoveEvent(QMouseEvent *event) {
         int deltaX = event->x() - width() / 2;
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
-        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-        m_mouse->translate(deltaX , deltaY);
+        //QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
+        //m_mouse->translate(deltaX , deltaY);
         update();
     }
 }
