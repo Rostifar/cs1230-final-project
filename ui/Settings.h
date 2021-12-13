@@ -39,6 +39,8 @@ struct Settings {
     bool useLight1;
     bool useLight2;
 
+    bool useFreeMode;
+
     float ao;
 };
 

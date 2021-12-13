@@ -316,7 +316,7 @@ void main() {
 
     // transform camera eye so that it matches global position
     vec3 newEye = camEye;
-    if (useFreeView == USE_FREEVIEW) {
+    if (useFreeView != USE_FREEVIEW) {
         newEye =  vec3(sin(iTime) * 4, 0, cos(iTime) * 4);
     }
 
@@ -340,7 +340,7 @@ void main() {
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
 
-    if (useFreeView != USE_FREEVIEW) {
+    if (useFreeView == USE_FREEVIEW) {
         rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
         rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
         rayDirection = normalize(rayDirection);

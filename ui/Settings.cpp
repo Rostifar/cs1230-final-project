@@ -17,4 +17,6 @@ void Settings::loadSettingsOrDefaults() {
     this->orbitMix = 1.f;
     this->useLight1 = true;
     this->useLight2 = true;
+
+    this->useFreeMode = true;
 }

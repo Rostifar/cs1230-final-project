@@ -25,7 +25,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 
     // Hide the cursor
     if (m_captureMouse) {
-        // QApplication::setOverrideCursor(Qt::BlankCursor);
+        QApplication::setOverrideCursor(Qt::BlankCursor);
     }
 
     // View needs keyboard focus
@@ -159,7 +159,6 @@ void View::paintGL() {
 
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
-    // TODO: do we really need to change these all of the time?
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
     glUniform1f(timeUniformLoc, m_accTime);
 
@@ -178,7 +177,7 @@ void View::paintGL() {
     moveColoringUniforms();
     moveFractalUniforms();
     GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
-    glUniform1i(freeViewUniformLoc, 1);
+    glUniform1i(freeViewUniformLoc, settings.useFreeMode ? 1 : 0);
 
     m_quad->draw();
     glUseProgram(0);
@@ -203,12 +202,12 @@ void View::mouseMoveEvent(QMouseEvent *event) {
     // in that direction. Note that it is important to check that deltaX and
     // deltaY are not zero before recentering the mouse, otherwise there will
     // be an infinite loop of mouse move events.
-    if(m_captureMouse && !lowpowerMode) {
+    if(m_captureMouse && !lowpowerMode && settings.useFreeMode) {
         int deltaX = event->x() - width() / 2;
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
-        //QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
-        //m_mouse->translate(deltaX , deltaY);
+        QCursor::setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
+        m_mouse->translate(deltaX , deltaY);
         update();
     }
 }
@@ -218,7 +217,7 @@ void View::mouseReleaseEvent(QMouseEvent *event) {
 
 
 void View::wheelEvent(QWheelEvent *event) {
-    if(!lowpowerMode) {
+    if(!lowpowerMode && settings.useFreeMode) {
         m_camera->mouseScrolled(event->delta() * 0.3f);
         update();
     }
@@ -227,6 +226,15 @@ void View::wheelEvent(QWheelEvent *event) {
 
 void View::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) QApplication::quit();
+    if (event->key() == Qt::Key_T) {
+        if (m_captureMouse) {
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+            m_captureMouse = false;
+        } else {
+            QApplication::setOverrideCursor(Qt::BlankCursor);
+            m_captureMouse = true;
+        }
+    }
 }
 
 void View::keyReleaseEvent(QKeyEvent *event) {
