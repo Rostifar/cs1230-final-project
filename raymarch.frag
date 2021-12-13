@@ -62,7 +62,7 @@ uniform vec4 zTrapColor;       /* [0, 1]^4 */
 uniform vec4 originTrapColor;  /* [0, 1]^4 */
 
 uniform float orbitMix; /* [0, 1] */
-uniform float stepMix;  /* [0, 1] */
+//uniform float stepMix;  /* [0, 1] */ @deprecated
 
 // fractal values
 uniform float power;           /* [1, 28] */
