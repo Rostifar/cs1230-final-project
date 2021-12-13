@@ -1,6 +1,7 @@
 #include "Databinding.h"
 #include <math.h>
 #include <QVariant>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 // class IntBinding

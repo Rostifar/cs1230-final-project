@@ -25,6 +25,19 @@ struct Settings {
     void loadSettingsOrDefaults();
 
     float ka_value;
+    float kd_value;
+    float ks_value;
+    float kr_value;
+
+    int ambient_color[3];
+    int base_color[3];
+    int xTrap_color[4];
+    int yTrap_color[4];
+    int zTrap_color[4];
+    int oTrap_color[4];
+    float orbitMix;
+    float stepMix;
+
 };
 
 // The global Settings object, will be initialized by MainWindow

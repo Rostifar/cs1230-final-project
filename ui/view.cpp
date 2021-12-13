@@ -1,6 +1,8 @@
 #include "view.h"
 
 #include "viewformat.h"
+#include "Settings.h"
+
 #include <QApplication>
 #include <QKeyEvent>
 #include <iostream>
@@ -85,16 +87,16 @@ void View::initializeGL() {
 
 void View::moveLightingUniforms() {
     GLint kaUniformLoc = glGetUniformLocation(m_program, "ka");
-    glUniform1f(kaUniformLoc, 0.2f);
+    glUniform1f(kaUniformLoc, settings.ka_value);
 
     GLint kdUniformLoc = glGetUniformLocation(m_program, "kd");
-    glUniform1f(kdUniformLoc, 1.f);
+    glUniform1f(kdUniformLoc, settings.kd_value);
 
     GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
-    glUniform1f(ksUniformLoc, 1.f);
+    glUniform1f(ksUniformLoc, settings.ks_value);
 
     GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
-    glUniform1f(krUniformLoc, 1.f);
+    glUniform1f(krUniformLoc, settings.kr_value);
 
     GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
     glUniform1i(useLightingUniformLoc, 2);
@@ -107,28 +109,28 @@ void View::moveLightingUniforms() {
 
 void View::moveColoringUniforms() {
     GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
-    glUniform3f(ambientColorUniformLoc, 1.f, 1.f, 1.f);
+    glUniform3f(ambientColorUniformLoc, calibrate(settings.ambient_color[0]), calibrate(settings.ambient_color[1]), calibrate(settings.ambient_color[2]));
 
     GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
-    glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);
+    glUniform3f(fractalBaseColorUniformLoc, calibrate(settings.base_color[0]), calibrate(settings.base_color[1]), calibrate(settings.base_color[2]));
 
     GLint xTrapColorUniformLoc = glGetUniformLocation(m_program, "xTrapColor");
-    glUniform4f(xTrapColorUniformLoc, 0.2f, 0.2f, 0.2f, 0.0f);
+    glUniform4f(xTrapColorUniformLoc, calibrate(settings.xTrap_color[0]), calibrate(settings.xTrap_color[1]), calibrate(settings.xTrap_color[2]), calibrate(settings.xTrap_color[3]));
 
     GLint yTrapColorUniformLoc = glGetUniformLocation(m_program, "yTrapColor");
-    glUniform4f(yTrapColorUniformLoc, 0.f, 1.f, 0.f, 1.f);
+    glUniform4f(yTrapColorUniformLoc, calibrate(settings.yTrap_color[0]), calibrate(settings.yTrap_color[1]), calibrate(settings.yTrap_color[2]), calibrate(settings.yTrap_color[3]));
 
     GLint zTrapColorUniformLoc = glGetUniformLocation(m_program, "zTrapColor");
-    glUniform4f(zTrapColorUniformLoc, 0.3f, 0.9f, 0.f, 1.f);
+    glUniform4f(zTrapColorUniformLoc, calibrate(settings.zTrap_color[0]), calibrate(settings.zTrap_color[1]), calibrate(settings.zTrap_color[2]), calibrate(settings.zTrap_color[3]));
 
     GLint originTrapColorUniformLoc = glGetUniformLocation(m_program, "originTrapColor");
-    glUniform4f(originTrapColorUniformLoc, 0.f, 0.1f, 0.6f, 1.f);
+    glUniform4f(originTrapColorUniformLoc, calibrate(settings.oTrap_color[0]), calibrate(settings.oTrap_color[1]), calibrate(settings.oTrap_color[2]), calibrate(settings.oTrap_color[3]));
 
     GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
-    glUniform1f(orbitMixUniformLoc, 1.f);
+    glUniform1f(orbitMixUniformLoc, settings.orbitMix);
 
     GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
-    glUniform1f(stepMixUniformLoc, 0.2f);
+    glUniform1f(stepMixUniformLoc, settings.stepMix);
 }
 
 void View::moveFractalUniforms() {
@@ -198,6 +200,7 @@ void View::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
+
 void View::mousePressEvent(QMouseEvent *event) {
 }
 
@@ -244,3 +247,5 @@ void View::tick() {
     m_accTime += seconds;
     update();
 }
+
+
