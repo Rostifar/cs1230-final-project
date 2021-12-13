@@ -98,6 +98,11 @@ void View::moveLightingUniforms() {
 
     GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
     glUniform1i(useLightingUniformLoc, 2);
+
+    GLint useLight1UniformLoc = glGetUniformLocation(m_program, "useLight1");
+    glUniform1i(useLight1UniformLoc, 1);
+    GLint useLight2UniformLoc = glGetUniformLocation(m_program, "useLight2");
+    glUniform1i(useLight2UniformLoc, 1);
 }
 
 void View::moveColoringUniforms() {
@@ -144,6 +149,9 @@ void View::moveFractalUniforms() {
 
     GLint ambientOcclusionUniformLoc = glGetUniformLocation(m_program, "aoStrength");
     glUniform1f(ambientOcclusionUniformLoc, 1.f);
+
+    GLint fractalTypeUniformLoc = glGetUniformLocation(m_program, "fractalType");
+    glUniform1i(fractalTypeUniformLoc, 53);
 }
 
 
@@ -177,7 +185,7 @@ void View::paintGL() {
     moveColoringUniforms();
     moveFractalUniforms();
     GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
-    glUniform1i(freeViewUniformLoc, 1);
+    glUniform1i(freeViewUniformLoc, 0);
 
     m_quad->draw();
     glUseProgram(0);

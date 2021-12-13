@@ -1,23 +1,18 @@
-#version 400
+#   version 400
 #define USE_LOWPOWER_MODE 0
 #define USE_FREEVIEW      1
 #define USE_LIGHTING      2
 
 #define MANDELBULB        50
-#define MANDELBOX         51
-#define NO_INTERSECT      52
+#define JULIA_QUATERNION  51
+#define MANDELBOX         52
+#define NO_INTERSECT      53
 
 #define PI 3.141592
 
 // inputs and outputs
 in vec2 fragUV;
 layout(location = 0) out vec4 color;
-
-struct Light {
-    vec3 position;
-    vec3 intensity;
-    int type;
-};
 
 
 // constants
@@ -28,6 +23,7 @@ const float orbitTrapRadius = 1e4;
 
 const float minDist = 0.f;
 const float maxDist = 50.f;
+const float orbitTrapIntensityScale = 3.f;
 
 const vec3 starLow = vec3(0.61, 0.69, 0.99);
 const vec3 starHigh = vec3(0.99, 0.80, 0.43);
@@ -53,7 +49,9 @@ uniform float ka;
 uniform float ks;
 uniform float kd;
 uniform float kr; // TODO
-uniform int   useLighting; /* {0, 1} */
+//uniform int   useLighting; /* {0, 1} */ @deprecated
+uniform int   useLight1; /* {0, 1} */
+uniform int   useLight2; /* {0, 1}*/
 
 // coloring values
 uniform vec3 ambientColor;     /* [0, 1]^3 */
@@ -73,9 +71,10 @@ uniform int fractalIterations; /* [1, 40] */
 uniform float stepFactor;      /* (0, 1] */
 uniform float bailout;         /* [1, 8]*/
 uniform float aoStrength;      /* [0, 100] */
+uniform int   fractalType;
 
 
-// <-------
+// <---HELPERS----
 mat4 rotY(float ang) {
     float x = cos(ang);
     float y = sin(ang);
@@ -95,6 +94,11 @@ mat4 rotX(float ang) {
                 0, y,  x, 0,
                 0, 0,  0, 1);
 }
+
+// rand function; src: https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+float rand(float i){
+    return fract(sin(dot(vec2(i, i), vec2(32.9898,78.233))) * 43758.5453);
+}
 // ------->
 
 
@@ -111,14 +115,9 @@ vec3 calcOrbitTrapColor() {
                       yTrapColor.xyz * yTrapColor.w * orbitTrap.y +
                       zTrapColor.xyz * zTrapColor.w * orbitTrap.z +
                       originTrapColor.xyz * originTrapColor.w * orbitTrap.w;
-    return clamp(mix(fractalBaseColor, 3 * orbitColor,  orbitMix), 0, 1);
+    return clamp(mix(fractalBaseColor, orbitTrapIntensityScale * orbitColor,  orbitMix), 0, 1);
 }
 
-float sdBox( vec3 p, vec3 b )
-{
-  vec3 q = abs(p) - b;
-  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
-}
 
 float mandelbulbDE(vec3 p) {
     vec3 z   = p;
@@ -163,28 +162,37 @@ float juliaQuaternionDE(vec3 pos) {
     return 0.2f * r * log(r) / length(q2);
 }
 
-/*float mandelboxDE(vec3 pos) {
-  float SCALE = 2.8;
-  float MR2 = 0.2;
+float mandelboxDE(vec3 pos) {
+    // constants chosen empirically (combination of speed and aesthetics)
+    vec4 scalevec = vec4(2.8f) / 0.2f;
+    float c2 = pow(2.8f, float(1 - fractalIterations));
 
-  vec4 scalevec = vec4(2.4f, 2.4, SCALE, abs(SCALE)) / MR2;
-  float C1 = abs(SCALE-1.0), C2 = pow(abs(SCALE), float(1-fractalIterations));
+    vec4 p  = vec4(pos.xyz, 1.0);
+    vec4 p0 = vec4(pos.xyz, 1.0);
+    for(int i = 0; i < fractalIterations; i++) {
+        // perform box folding
+        p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
+        float r2 = dot(p.xyz, p.xyz);
 
-  vec4 p = vec4(pos.xyz, 1.0), p0 = vec4(pos.xyz, 1.0);
-
-  for (int i=0; i<fractalIterations / 2; i++) {
-    p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
-    float r2 = dot(p.xyz, p.xyz);  // dp3
-        orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
-    p.xyzw *= clamp(max(MR2/r2, MR2), 0.0, 1.0);
-    p.xyzw = p*scalevec + p0;
-  }
-  return ((length(p.xyz) - C1) / p.w) - C2;
-}*/
+        // perform sphere folding
+        p.xyzw *= clamp(max(0.2f / r2, 0.2f), 0.0, 1.0);
+        p.xyzw = p*scalevec + p0;
+    }
+    return (length(p.xyz) - 1.8f) / p.w - c2;
+}
 
 PrimitiveDist map(vec3 p) {
-    float mandelbulb = juliaQuaternionDE(p);
-    return PrimitiveDist(mandelbulb, MANDELBULB);
+    PrimitiveDist dist;
+    if (fractalType == JULIA_QUATERNION) {
+        dist = PrimitiveDist(juliaQuaternionDE(p), JULIA_QUATERNION);
+    }
+    else if (fractalType == MANDELBOX) {
+        dist = PrimitiveDist(mandelboxDE(p), MANDELBOX);
+    }
+    else {
+        dist = PrimitiveDist(mandelbulbDE(p), MANDELBULB);
+    }
+    return dist;
 }
 
 
@@ -223,7 +231,7 @@ float ambientOcclusion(vec3 p, vec3 n) {
     float denom = 0.5f;
 
     for (int i = 1; i < 6; i++) {
-        float fd = juliaQuaternionDE(p + n * delta * i);
+        float fd = map(p + n * delta * i).dist;
         ao += (delta * i - fd) / denom;
         denom *= 0.5;
         delta = delta * 2.0 - aoEps;
@@ -261,31 +269,35 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
     vec3 pos = ro + rd * t;
     vec3 col = calcOrbitTrapColor();
 
-    if (useLighting == USE_LIGHTING) {
+    if (useLight1 == 1 || useLight2 == 0) {
         vec3 lig1 = normalize(vec3(5.f, 5.f, 5.f) - pos);
         vec3 lig2 = normalize(vec3(-5.0, -5.0, -5.0) - pos);
 
         vec3 nor = calcNormal(pos);
 
-        float diffuse = clamp(dot(nor, lig1), 0.0, 1.0);
-        diffuse += clamp(dot(nor, lig2), 0.0, 1.0);
+        float diffuse = 0.f;
         float shineness = 32.0;
-        float specular = pow(clamp(dot(-rd, reflect(lig1, nor)), 0.0, 1.0), shineness);
-        specular += pow(clamp(dot(-rd, reflect(lig2, nor)), 0.0, 1.0), shineness);
+        float specular = 0.f;
 
-        float darkness = shadow(pos, lig1, 18.0);
+        float lightCol = 0.f;
+        if (useLight1 == 1) {
+            float darkness = shadow(pos, lig1, 18.0);
+            diffuse = clamp(dot(nor, lig1), 0.0, 1.0);
+            specular = pow(clamp(dot(-rd, reflect(lig1, nor)), 0.0, 1.0), shineness);
+            lightCol += darkness * (kd * diffuse + ks * specular);
+        }
+
+        if (useLight2 == 1) {
+            float darkness = shadow(pos, lig2, 18.0);
+            diffuse = clamp(dot(nor, lig2), 0.0, 1.0);
+            specular = pow(clamp(dot(-rd, reflect(lig2, nor)), 0.0, 1.0), shineness);
+            lightCol += darkness * (kd * diffuse + ks * specular);
+        }
 
         float ao = ambientOcclusion(pos, nor);
-        //ao = 1;
-        //darkness = 1.f;
-        col = ((ao * ka * ambientColor) + vec3((kd * diffuse + ks * specular) * darkness) * col);
+        col = ((ao * ka * ambientColor) + vec3(lightCol) * col);
     }
     return clamp(col, 0, 1);
-}
-
-// rand function; src: https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
-float rand(float i){
-    return fract(sin(dot(vec2(i, i), vec2(32.9898,78.233))) * 43758.5453);
 }
 
 vec4 renderBackground() {
@@ -301,10 +313,9 @@ void main() {
 
     // transform camera eye so that it matches global position
     vec3 newEye = camEye;
-    //newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
-    //newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-    //newEye = vec3(sin(iTime) * abs(10 - iTime / 5), 0, cos(iTime) * abs(10 - iTime / 5));
-    //newEye =  vec3(sin(iTime) * 4, 0, cos(iTime) * 4);
+    if (useFreeView == USE_FREEVIEW) {
+        newEye =  vec3(sin(iTime) * 4, 0, cos(iTime) * 4);
+    }
 
     // Look vector (always looking at origin)
     vec3 look = normalize(newEye);
@@ -326,13 +337,14 @@ void main() {
 
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
 
-    rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
-    rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
-    rayDirection = normalize(rayDirection);
+    if (useFreeView != USE_FREEVIEW) {
+        rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
+        rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
+        rayDirection = normalize(rayDirection);
 
-    newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
-    newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
-
+        newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
+        newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
+    }
 
     PrimitiveDist rayMarchResult = raymarch(newEye, rayDirection);
     if (rayMarchResult.primitive != NO_INTERSECT) {
