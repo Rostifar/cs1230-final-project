@@ -29,7 +29,6 @@ void MainWindow::databind() {
     BIND(FloatBinding::bindSliderAndTextbox(ui->ka_horizontalSlider, ui->ka_lineEdit, settings.ka_value, 0.0, 1.0));
     BIND(FloatBinding::bindSliderAndTextbox(ui->kd_horizontalSlider, ui->kd_lineEdit, settings.kd_value, 0.0, 1.0));
     BIND(FloatBinding::bindSliderAndTextbox(ui->ks_horizontalSlider, ui->ks_lineEdit, settings.ks_value, 0.0, 1.0));
-    BIND(FloatBinding::bindSliderAndTextbox(ui->kr_horizontalSlider, ui->kr_lineEdit, settings.kr_value, 0.0, 1.0));
 
     BIND(IntBinding::bindTextbox(ui->ambient_lineEdit_r, settings.ambient_color[0]));
     BIND(IntBinding::bindTextbox(ui->ambient_lineEdit_g, settings.ambient_color[1]));
@@ -62,7 +61,16 @@ void MainWindow::databind() {
 
     BIND(FloatBinding::bindSliderAndTextbox(ui->orbit_mix_horizontalSlider, ui->orbit_mix_lineEdit, settings.orbitMix, 0.0, 1.0));
 
-    BIND(FloatBinding::bindSliderAndTextbox(ui->step_mix_horizontalSlider, ui->step_mix_lineEdit, settings.stepMix, 0.0, 1.0));
+    BIND(BoolBinding::bindCheckbox(ui->light1Toggle, settings.useLight1));
+
+    BIND(BoolBinding::bindCheckbox(ui->light2Toggle, settings.useLight2));
+
+    BIND(BoolBinding::bindCheckbox(ui->useFreeMode, settings.useFreeMode));
+
+    BIND(FloatBinding::bindSliderAndTextbox(ui->ao_horizontal_slider, ui->ao_lineEdit, settings.ao, 0, 5));
+
+    //BIND(FloatBinding::bindSliderAndTextbox(ui->step_mix_horizontalSlider, ui->step_mix_lineEdit, settings.stepMix, 0.0, 1.0));
+
 
 
 }

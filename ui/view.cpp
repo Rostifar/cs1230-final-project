@@ -25,7 +25,7 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 
     // Hide the cursor
     if (m_captureMouse) {
-        // QApplication::setOverrideCursor(Qt::BlankCursor);
+        QApplication::setOverrideCursor(Qt::BlankCursor);
     }
 
     // View needs keyboard focus
@@ -95,11 +95,10 @@ void View::moveLightingUniforms() {
     GLint ksUniformLoc = glGetUniformLocation(m_program, "ks");
     glUniform1f(ksUniformLoc, settings.ks_value);
 
-    GLint krUniformLoc = glGetUniformLocation(m_program, "kr");
-    glUniform1f(krUniformLoc, settings.kr_value);
-
-    GLint useLightingUniformLoc = glGetUniformLocation(m_program, "useLighting");
-    glUniform1i(useLightingUniformLoc, 2);
+    GLint useLight1UniformLoc = glGetUniformLocation(m_program, "useLight1");
+    glUniform1i(useLight1UniformLoc, settings.useLight1 ? 1 : 0);
+    GLint useLight2UniformLoc = glGetUniformLocation(m_program, "useLight2");
+    glUniform1i(useLight2UniformLoc, settings.useLight2 ? 1 : 0);
 }
 
 void View::moveColoringUniforms() {
@@ -123,26 +122,29 @@ void View::moveColoringUniforms() {
 
     GLint orbitMixUniformLoc = glGetUniformLocation(m_program, "orbitMix");
     glUniform1f(orbitMixUniformLoc, settings.orbitMix);
-
-    GLint stepMixUniformLoc = glGetUniformLocation(m_program, "stepMix");
-    glUniform1f(stepMixUniformLoc, settings.stepMix);
 }
 
 void View::moveFractalUniforms() {
     GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
-    glUniform1f(powerUniformLoc, 8.f);
+    glUniform1f(powerUniformLoc, 6.f);
 
     GLint raymarchStepsUniformLoc = glGetUniformLocation(m_program, "raymarchSteps");
-    glUniform1i(raymarchStepsUniformLoc, 1000);
+    glUniform1i(raymarchStepsUniformLoc, 768);
 
     GLint fractalIterationsUniformLoc = glGetUniformLocation(m_program, "fractalIterations");
     glUniform1i(fractalIterationsUniformLoc, 30);
 
     GLint stepFactorUniformLoc = glGetUniformLocation(m_program, "stepFactor");
-    glUniform1f(stepFactorUniformLoc, 0.3f);
+    glUniform1f(stepFactorUniformLoc, 0.2f);
 
     GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
-    glUniform1f(bailoutUniformLoc, 4.f);
+    glUniform1f(bailoutUniformLoc, 2.f);
+
+    GLint ambientOcclusionUniformLoc = glGetUniformLocation(m_program, "aoStrength");
+    glUniform1f(ambientOcclusionUniformLoc, settings.ao);
+
+    GLint fractalTypeUniformLoc = glGetUniformLocation(m_program, "fractalType");
+    glUniform1i(fractalTypeUniformLoc, 53);
 }
 
 
@@ -157,7 +159,6 @@ void View::paintGL() {
 
     glUniform2f(screenResUniformLoc, static_cast<float>(m_viewport[2]), static_cast<float>(m_viewport[3]));
 
-    // TODO: do we really need to change these all of the time?
     GLint timeUniformLoc = glGetUniformLocation(m_program, "iTime");
     glUniform1f(timeUniformLoc, m_accTime);
 
@@ -176,7 +177,7 @@ void View::paintGL() {
     moveColoringUniforms();
     moveFractalUniforms();
     GLint freeViewUniformLoc = glGetUniformLocation(m_program, "useFreeView");
-    glUniform1i(freeViewUniformLoc, 1);
+    glUniform1i(freeViewUniformLoc, settings.useFreeMode ? 1 : 0);
 
     m_quad->draw();
     glUseProgram(0);
@@ -201,7 +202,7 @@ void View::mouseMoveEvent(QMouseEvent *event) {
     // in that direction. Note that it is important to check that deltaX and
     // deltaY are not zero before recentering the mouse, otherwise there will
     // be an infinite loop of mouse move events.
-    if(m_captureMouse && !lowpowerMode) {
+    if(m_captureMouse && !lowpowerMode && settings.useFreeMode) {
         int deltaX = event->x() - width() / 2;
         int deltaY = event->y() - height() / 2;
         if (!deltaX && !deltaY) return;
@@ -216,7 +217,7 @@ void View::mouseReleaseEvent(QMouseEvent *event) {
 
 
 void View::wheelEvent(QWheelEvent *event) {
-    if(!lowpowerMode) {
+    if(!lowpowerMode && settings.useFreeMode) {
         m_camera->mouseScrolled(event->delta() * 0.3f);
         update();
     }
@@ -225,6 +226,15 @@ void View::wheelEvent(QWheelEvent *event) {
 
 void View::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_Escape) QApplication::quit();
+    if (event->key() == Qt::Key_T) {
+        if (m_captureMouse) {
+            QApplication::setOverrideCursor(Qt::ArrowCursor);
+            m_captureMouse = false;
+        } else {
+            QApplication::setOverrideCursor(Qt::BlankCursor);
+            m_captureMouse = true;
+        }
+    }
 }
 
 void View::keyReleaseEvent(QKeyEvent *event) {
