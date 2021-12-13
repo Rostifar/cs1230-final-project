@@ -297,6 +297,7 @@ vec3 render(vec3 ro, vec3 rd, float t, int which) {
         }
 
         float ao = ambientOcclusion(pos, nor);
+        //ao = 1;
         col = ((ao * ka * ambientColor) + vec3(lightCol) * col);
     }
     return clamp(col, 0, 1);

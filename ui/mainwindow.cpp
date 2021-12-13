@@ -65,6 +65,8 @@ void MainWindow::databind() {
 
     BIND(BoolBinding::bindCheckbox(ui->light2Toggle, settings.useLight2));
 
+    BIND(FloatBinding::bindSliderAndTextbox(ui->ao_horizontal_slider, ui->ao_lineEdit, settings.ao, 0, 5));
+
     //BIND(FloatBinding::bindSliderAndTextbox(ui->step_mix_horizontalSlider, ui->step_mix_lineEdit, settings.stepMix, 0.0, 1.0));
 
 

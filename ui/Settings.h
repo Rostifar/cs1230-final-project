@@ -39,6 +39,7 @@ struct Settings {
     bool useLight1;
     bool useLight2;
 
+    float ao;
 };
 
 // The global Settings object, will be initialized by MainWindow
