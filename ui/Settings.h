@@ -29,7 +29,15 @@ struct Settings {
     float ks_value;
     float kr_value;
 
-    int ambient_color_values[3];
+    int ambient_color[3];
+    int base_color[3];
+    int xTrap_color[4];
+    int yTrap_color[4];
+    int zTrap_color[4];
+    int oTrap_color[4];
+    float orbitMix;
+    float stepMix;
+
 };
 
 // The global Settings object, will be initialized by MainWindow

@@ -1,6 +1,7 @@
 #include "Databinding.h"
 #include <math.h>
 #include <QVariant>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 // class IntBinding
@@ -28,7 +29,6 @@ IntBinding* IntBinding::bindSliderAndTextbox(
 
 IntBinding* IntBinding::bindTextbox(QLineEdit *textbox, int &value) {
     // Bind the the textbox and the value together
-    value = (value > 255) ? 255 : ((value < 0) ? 0 : value);
     IntBinding *binding = new IntBinding(value);
     connect(textbox, SIGNAL(textChanged(QString)), binding, SLOT(stringChanged(QString)));
 

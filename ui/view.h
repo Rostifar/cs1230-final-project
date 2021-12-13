@@ -50,8 +50,14 @@ private:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 
+    float calibrate(int value);
+
 private slots:
     void tick();
 };
 
+inline float View::calibrate(int value) {
+    value = (value < 0) ? 0 : ((value > 255) ? 255 : value);
+    return value / 255.f;
+}
 #endif // VIEW_H
