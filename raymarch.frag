@@ -174,6 +174,8 @@ float mandelboxDE(vec3 pos) {
         p.xyz = clamp(p.xyz, -1.0, 1.0) * 2.0 - p.xyz;
         float r2 = dot(p.xyz, p.xyz);
 
+        orbitTrap = min(orbitTrap, abs(vec4(p.xyz,r2)));
+
         // perform sphere folding
         p.xyzw *= clamp(max(0.2f / r2, 0.2f), 0.0, 1.0);
         p.xyzw = p*scalevec + p0;
