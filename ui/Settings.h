@@ -28,6 +28,8 @@ struct Settings {
     float kd_value;
     float ks_value;
     float kr_value;
+
+    int ambient_color_values[3];
 };
 
 // The global Settings object, will be initialized by MainWindow

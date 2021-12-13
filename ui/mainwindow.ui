@@ -33,6 +33,12 @@
    </layout>
   </widget>
   <widget class="QDockWidget" name="dockWidget">
+   <property name="minimumSize">
+    <size>
+     <width>300</width>
+     <height>35</height>
+    </size>
+   </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
@@ -69,7 +75,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>KA</string>
+       <string>ka</string>
       </property>
      </widget>
      <widget class="QLineEdit" name="ka_lineEdit">
@@ -92,7 +98,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>KD</string>
+       <string>kd</string>
       </property>
      </widget>
      <widget class="QSlider" name="kd_horizontalSlider">
@@ -118,7 +124,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLabel" name="kssssssss_label">
+     <widget class="QLabel" name="ks_label">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -128,7 +134,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>KS</string>
+       <string>ks</string>
       </property>
      </widget>
      <widget class="QSlider" name="ks_horizontalSlider">
@@ -164,7 +170,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>KR</string>
+       <string>kr</string>
       </property>
      </widget>
      <widget class="QSlider" name="kr_horizontalSlider">
@@ -188,6 +194,88 @@
         <width>41</width>
         <height>16</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="Line" name="line_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>251</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="ambient_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>150</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Ambient Color</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ambient_lineEdit_g">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>150</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ambient_lineEdit_b">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>150</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="ambient_lineEdit_r">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>150</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="Line" name="line_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>251</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>281</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Realtime 3D Fractal Rendering</string>
       </property>
      </widget>
     </widget>

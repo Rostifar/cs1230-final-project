@@ -104,7 +104,7 @@ void View::moveLightingUniforms() {
 
 void View::moveColoringUniforms() {
     GLint ambientColorUniformLoc = glGetUniformLocation(m_program, "ambientColor");
-    glUniform3f(ambientColorUniformLoc, 0.3f, 0.9f, 0.5f);
+    glUniform3f(ambientColorUniformLoc, settings.ambient_color_values[0] / 255.f, settings.ambient_color_values[1] / 255.f, settings.ambient_color_values[2] / 255.f);
 
     GLint fractalBaseColorUniformLoc = glGetUniformLocation(m_program, "fractalBaseColor");
     glUniform3f(fractalBaseColorUniformLoc, 1.f, 1.f, 1.f);

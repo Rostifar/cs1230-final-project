@@ -30,6 +30,11 @@ void MainWindow::databind() {
     BIND(FloatBinding::bindSliderAndTextbox(ui->kd_horizontalSlider, ui->kd_lineEdit, settings.kd_value, 0.0, 1.0));
     BIND(FloatBinding::bindSliderAndTextbox(ui->ks_horizontalSlider, ui->ks_lineEdit, settings.ks_value, 0.0, 1.0));
     BIND(FloatBinding::bindSliderAndTextbox(ui->kr_horizontalSlider, ui->kr_lineEdit, settings.kr_value, 0.0, 1.0));
+
+    BIND(IntBinding::bindTextbox(ui->ambient_lineEdit_r, settings.ambient_color_values[0]));
+    BIND(IntBinding::bindTextbox(ui->ambient_lineEdit_g, settings.ambient_color_values[1]));
+    BIND(IntBinding::bindTextbox(ui->ambient_lineEdit_b, settings.ambient_color_values[2]));
+
 }
 
 // assert(connect(_b, SIGNAL(dataChanged()), this, SLOT(settingsChanged()))); \
