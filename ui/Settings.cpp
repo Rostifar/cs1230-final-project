@@ -1,5 +1,6 @@
 #include "Settings.h"
 #include <QSettings>
+#include <iostream>
 
 Settings settings;
 
@@ -18,7 +19,9 @@ void Settings::loadSettingsOrDefaults() {
     this->oTrap_color[0] = 0, this->oTrap_color[1] = 26, this->oTrap_color[2] = 154, oTrap_color[3] = 255;
     this->orbitMix = 1.f;
 
-    this->power = 6.f;
+    this->power = 8.f;
+
+    std::cout << this->power << std::endl;
     this->raymarchSteps = 768;
     this->fractalIterations = 30;
     this->stepFactor = 0.2f;

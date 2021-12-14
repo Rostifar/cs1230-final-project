@@ -19,10 +19,12 @@ IntBinding* IntBinding::bindSliderAndTextbox(
     connect(binding, SIGNAL(updateString(QString)), textbox, SLOT(setText(QString)));
 
     // Set the range and initial value
+    //assert(minValue <= value && value <= maxValue);
+    int v = value;
     slider->setMinimum(minValue);
     slider->setMaximum(maxValue);
-    slider->setValue(value);
-    textbox->setText(QString::number(value));
+    slider->setValue(v);
+    textbox->setText(QString::number(v));
 
     return binding;
 }
@@ -126,11 +128,12 @@ FloatBinding* FloatBinding::bindSliderAndTextbox(
     connect(binding, SIGNAL(updateString(QString)), textbox, SLOT(setText(QString)));
     //connect(binding, SIGNAL(updateString(QString)), binding, SLOT(dataChanged()));
 
+    float f = value;
     // Set the range and initial value
     slider->setMinimum(mapValue(minValue));
     slider->setMaximum(mapValue(maxValue));
-    slider->setValue(mapValue(value));
-    textbox->setText(QString::number(value));
+    slider->setValue(mapValue(f));
+    textbox->setText(QString::number(f));
 
     return binding;
 }

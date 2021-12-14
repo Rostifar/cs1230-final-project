@@ -61,24 +61,17 @@ void MainWindow::databind() {
     BIND(IntBinding::bindTextbox(ui->oTrap_lineEdit_w, settings.oTrap_color[3]));
     BIND(FloatBinding::bindSliderAndTextbox(ui->orbit_mix_horizontalSlider, ui->orbit_mix_lineEdit, settings.orbitMix, 0.0, 1.0));
 
-    BIND(FloatBinding::bindSliderAndTextbox(ui->power_horizontalSlider, ui->power_lineEdit, settings.power, 1, 28));
+    BIND(FloatBinding::bindSliderAndTextbox(ui->power_horizontalSlider, ui->power_lineEdit, settings.power, 1.f, 28.f));
+
     BIND(IntBinding::bindSliderAndTextbox(ui->raymarch_steps_horizontalSlider, ui->raymarch_steps_lineEdit, settings.raymarchSteps, 500, 1229));
     BIND(IntBinding::bindSliderAndTextbox(ui->fractal_iterations_horizontalSlider, ui->fractal_iterations_lineEdit, settings.fractalIterations, 1, 40));
     BIND(FloatBinding::bindSliderAndTextbox(ui->step_factor_horizontalSlider, ui->step_factor_lineEdit, settings.stepFactor, 0, 1));
-    BIND(FloatBinding::bindSliderAndTextbox(ui->bailout_horizontalSlider, ui->bailout_lineEdit, settings.bailout, 1, 8));
+    BIND(FloatBinding::bindSliderAndTextbox(ui->bailout_horizontalSlider, ui->bailout_lineEdit, settings.bailout, 1.f, 8.f));
 
     BIND(ChoiceBinding::bindRadioButtons(fractalButtonGroup, 3, settings.fractalType, ui->mandelbulb, ui->julia_quaternion, ui->mandelbox));
 
 
     BIND(BoolBinding::bindCheckbox(ui->useFreeMode, settings.useFreeMode));
     BIND(BoolBinding::bindCheckbox(ui->animate, settings.animate));
-
-
-
-    //BIND(FloatBinding::bindSliderAndTextbox(ui->step_mix_horizontalSlider, ui->step_mix_lineEdit, settings.stepMix, 0.0, 1.0));
-
-
-
 }
 
-// assert(connect(_b, SIGNAL(dataChanged()), this, SLOT(settingsChanged()))); \
