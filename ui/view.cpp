@@ -145,6 +145,9 @@ void View::moveFractalUniforms() {
 
     GLint fractalTypeUniformLoc = glGetUniformLocation(m_program, "fractalType");
     glUniform1i(fractalTypeUniformLoc, 53);
+
+    GLint animateUniformLoc = glGetUniformLocation(m_program, "animate");
+    glUniform1i(animateUniformLoc, 1);
 }
 
 

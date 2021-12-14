@@ -72,6 +72,7 @@ uniform float stepFactor;      /* (0, 1] */
 uniform float bailout;         /* [1, 8]*/
 uniform float aoStrength;      /* [0, 100] */
 uniform int   fractalType;
+uniform int   animate;
 
 
 // <---HELPERS----
@@ -123,6 +124,7 @@ float mandelbulbDE(vec3 p) {
     vec3 z   = p;
     float dr = 1.0;
     float r  = 0.0;
+    float newPower = (animate == 1) ? clamp(cos(iTime / 2) * 8, 2, 30) : power;
     for (int i = 0; i < fractalIterations; i++) {
             r = length(z);
             if (r > bailout) break;
@@ -130,12 +132,12 @@ float mandelbulbDE(vec3 p) {
             // convert to polar coordinates
             float theta = acos(z.z/r);
             float phi = atan(z.y,z.x);
-            dr =  pow(r, power - 1.0) * power * dr + 1.0f;
+            dr = pow(r, newPower - 1.0) * newPower * dr + 1.0f;
 
             // scale and rotate the point
-            float zr = pow(r, power);
-            theta = theta * power;
-            phi = phi * power;
+            float zr = pow(r, newPower);
+            theta = theta * newPower;
+            phi = phi * newPower;
 
             // convert back to cartesian coordinates
             z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
@@ -153,7 +155,7 @@ float juliaQuaternionDE(vec3 pos) {
         q2 = 2.f * vec4(q1.x * q2.x - dot(q1.yzw, q2.yzw), q1.x * q2.yzw + q2.x * q1.yzw + cross(q1.yzw, q2.yzw));
 
         // quaternion sqrt
-        q1 = vec4(q1.x * q1.x - dot(q1.yzw, q1.yzw), vec3(2.f * q1.x * q1.yzw)) + cos(iTime);
+        q1 = vec4(q1.x * q1.x - dot(q1.yzw, q1.yzw), vec3(2.f * q1.x * q1.yzw)) + ((animate == 1) ? cos(iTime / 2) : 0.3f);
         float pDelta = dot(q1, q1);
         orbitTrap = min(orbitTrap, abs(vec4(q1.xyz, pDelta)));
         if (pDelta > bailout) break;
