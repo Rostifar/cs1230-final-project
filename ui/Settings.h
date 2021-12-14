@@ -27,6 +27,9 @@ struct Settings {
     float ka_value;
     float kd_value;
     float ks_value;
+    bool useLight1;
+    bool useLight2;
+    float ao;
 
     int ambient_color[3];
     int base_color[3];
@@ -36,12 +39,18 @@ struct Settings {
     int oTrap_color[4];
     float orbitMix;
 
-    bool useLight1;
-    bool useLight2;
+    float power;
+    int raymarchSteps;
+    int fractalIterations;
+    float stepFactor;
+    float bailout;
+
+    int fractalType;
+
 
     bool useFreeMode;
+    bool animate;
 
-    float ao;
 };
 
 // The global Settings object, will be initialized by MainWindow

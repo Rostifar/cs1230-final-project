@@ -126,28 +126,28 @@ void View::moveColoringUniforms() {
 
 void View::moveFractalUniforms() {
     GLint powerUniformLoc = glGetUniformLocation(m_program, "power");
-    glUniform1f(powerUniformLoc, 6.f);
+    glUniform1f(powerUniformLoc, settings.power);
 
     GLint raymarchStepsUniformLoc = glGetUniformLocation(m_program, "raymarchSteps");
-    glUniform1i(raymarchStepsUniformLoc, 768);
+    glUniform1i(raymarchStepsUniformLoc, settings.raymarchSteps);
 
     GLint fractalIterationsUniformLoc = glGetUniformLocation(m_program, "fractalIterations");
-    glUniform1i(fractalIterationsUniformLoc, 30);
+    glUniform1i(fractalIterationsUniformLoc, settings.fractalIterations);
 
     GLint stepFactorUniformLoc = glGetUniformLocation(m_program, "stepFactor");
-    glUniform1f(stepFactorUniformLoc, 0.2f);
+    glUniform1f(stepFactorUniformLoc, settings.stepFactor);
 
     GLint bailoutUniformLoc = glGetUniformLocation(m_program, "bailout");
-    glUniform1f(bailoutUniformLoc, 2.f);
+    glUniform1f(bailoutUniformLoc, settings.bailout);
 
     GLint ambientOcclusionUniformLoc = glGetUniformLocation(m_program, "aoStrength");
     glUniform1f(ambientOcclusionUniformLoc, settings.ao);
 
     GLint fractalTypeUniformLoc = glGetUniformLocation(m_program, "fractalType");
-    glUniform1i(fractalTypeUniformLoc, 53);
 
     GLint animateUniformLoc = glGetUniformLocation(m_program, "animate");
     glUniform1i(animateUniformLoc, 1);
+    glUniform1i(fractalTypeUniformLoc, 50 + settings.fractalType);
 }
 
 
