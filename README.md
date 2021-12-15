@@ -88,5 +88,7 @@ When running the viewer on a Windows 10, the mouse pointer will not be hidden in
 This is a bug with QT that has not been resolved: https://bugreports.qt.io/browse/QTBUG-56828. 
 No other bugs are known at this time. 
 
-
-
+## Authors 
+Ross Briden (ross_briden@brown.edu)
+Jason Senthil (jason_senthil@brown.edu)
+Aranav Baid (aranav_baid@brown.edu)
