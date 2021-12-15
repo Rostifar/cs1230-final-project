@@ -66,13 +66,13 @@ following functions:
 ### Camera Mode (PLEASE READ)
 MandelViewer implements two camera modes: a FreeMode and a FixedMode. When MandelViewer is first 
 launched, FreeMode will automatically be enabeled. In this mode, the mouse cursor is hidden and 
-fractal will rotate as you move your mouse; you can also scroll to zoom in or out of the fractal. 
+the fractal will rotate as you move your mouse; you can also scroll to zoom in or out of the fractal. 
 FreeMode allows you to freely explore the fractal. In FixedMode, the camera will move around 
 the fractal according to a fixed path. 
 
 **To exit FreeMode** and enter FixedMode, press **t** on your keyboard; at this point your mouse cursor should appear. Then, unselect FreeMode on the UI. At this point, the camera should be panning around the fractal in a circle. If the **t** command isn't working, you may need to click on the viewer and try again. 
 
-**To enter FreeMode** from FixedMode, select FreeMode on the UI and hit the **t** key to hide you cursor. 
+**To exit FixedMode** and enter FreeMode, select FreeMode on the UI and hit the **t** key to hide you cursor. 
 If the **t** command isn't working, you may need to click on the viewer and try again. 
 
 ## System Requirements 
