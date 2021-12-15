@@ -318,8 +318,9 @@ void main() {
 
     // transform camera eye so that it matches global position
     vec3 newEye = camEye;
+    float radius = fractalType == MANDELBOX ? 15.f : 4.f;
     if (useFreeView != USE_FREEVIEW) {
-        newEye =  vec3(sin(iTime) * 4, 0, cos(iTime) * 4);
+        newEye =  vec3(sin(iTime) * radius, 0, cos(iTime) * radius);
     }
 
     // Look vector (always looking at origin)
