@@ -90,5 +90,7 @@ No other bugs are known at this time.
 
 ## Authors 
 Ross Briden (ross_briden@brown.edu)
+
 Jason Senthil (jason_senthil@brown.edu)
+
 Aranav Baid (aranav_baid@brown.edu)
