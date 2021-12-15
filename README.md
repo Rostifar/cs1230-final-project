@@ -77,7 +77,7 @@ If the **t** command isn't working, you may need to click on the viewer and try 
 
 ## System Requirements 
 The following specifications are recommended: 
-* Operating System: Linux or Windows 10
+* Operating System: Linux or Windows 10. Mac OS *should* run fine but hasn't been tested. 
 * CPU: Most x86_64 Quad Core CPUs should work fine; Apple Silicon CPUs haven't been tested. 
 * GPU: Dedicated GPU with at least 4GB of VRAM (e.g. AMD RX 580 or NVIDIA 1080). 
 
