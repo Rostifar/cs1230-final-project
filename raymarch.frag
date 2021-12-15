@@ -339,13 +339,12 @@ void main() {
 
     uv.x *= iResolution.x / iResolution.y;
     vec3 rayDirection = vec3(uv.x, uv.y, focalLength);
-
+    rayDirection = normalize(rayDirection);
     rayDirection = rayDirection.x * cameraRight + rayDirection.y * cameraUp + rayDirection.z * cameraForward;
 
     if (useFreeView == USE_FREEVIEW) {
         rayDirection = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(rayDirection, 0.0)).xyz;
         rayDirection = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(rayDirection, 0.0)).xyz;
-        rayDirection = normalize(rayDirection);
 
         newEye = (rotX(-(0.5 * mousePos.y / iResolution.y))  * vec4(newEye, 1.0)).xyz;
         newEye = (rotY(-(0.5 * mousePos.x / iResolution.x))  * vec4(newEye, 1.0)).xyz;
